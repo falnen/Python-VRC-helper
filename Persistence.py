@@ -1,20 +1,19 @@
-import os
+from pathlib import Path
 import json
 import appdirs 
 from shutil import move
 import Layout
 
-directory_dir = appdirs.user_data_dir('osc app','falnen')
-os.makedirs(directory_dir,exist_ok=True)
-directory_file = os.path.join(directory_dir,"Directory.json")
+directory_dir = Path(appdirs.user_data_dir('osc app', 'falnen'))
+directory_dir.mkdir(parents=True, exist_ok=True)
+directory_file = directory_dir.joinpath("Directory.json")
 saved_controllers = {}
 
 # get current working directory
 def Directory():
-    os.makedirs(directory_dir, exist_ok=True)
-    if not os.path.exists(directory_file):
+    if not directory_file.exists():
         with open(directory_file,'w') as file:
-            json.dump({'Settings directory':directory_dir},file, indent=4)
+            json.dump({'Settings directory': str(directory_dir)}, file, indent=4)
 
     with open(directory_file,'r') as file:
         config = json.load(file)
@@ -22,23 +21,23 @@ def Directory():
 
 # update working directory and move State file if it exists
 def Update_dir(new_path):
-    old_dir = Directory()  
-    old_state_file = os.path.join(old_dir, "App State.json")
-    new_state_file = os.path.join(new_path, "App State.json")
-
-    os.makedirs(new_path, exist_ok=True)
-    if os.path.exists(old_state_file):
+    new_path = Path(new_path)
+    new_path.mkdir(exist_ok=True)
+    old_dir = Path(Directory())  
+    old_state_file = old_dir.joinpath("App State.json")
+    new_state_file = new_path.joinpath("App State.json")
+    
+    if old_state_file.exists():
         move(old_state_file,new_state_file)
     
     with open(directory_file,'w') as file:
-            json.dump({"Settings directory":new_path},file,indent=4)
+            json.dump({"Settings directory":str(new_path)},file,indent=4)
 
 # save all controllers to App State file
 def save_state(frames_dict):
-    path = Directory()
-    app_state_file = os.path.join(path,"App State.json")
-    os.makedirs(path, exist_ok=True)
-    if os.path.exists(app_state_file):
+    dir = Path(Directory())
+    app_state_file = dir.joinpath("App State.json")
+    if app_state_file.exists():
         with open(app_state_file,'r') as file:
             State = json.load(file)
     else:
@@ -74,9 +73,9 @@ def save_state(frames_dict):
         json.dump(State,file,indent=4)
 
 def Load_data():
-    path = Directory()
-    app_state_file = os.path.join(path,"App State.json")
-    if os.path.exists(app_state_file):
+    dir = Path(Directory())
+    app_state_file = dir.joinpath("App State.json")
+    if app_state_file.exists():
         with open(app_state_file,'r') as file:
             data = json.load(file)
         return data

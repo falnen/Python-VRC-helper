@@ -52,7 +52,7 @@ def Get_folder():
     Selected_Folder = filedialog.askdirectory(mustexist=True,)
     if not Selected_Folder:
         return
-    location_label.set(Selected_Folder)
+    location_var.set(Selected_Folder)
     Update_dir(Selected_Folder)
 
 def ctrlC_workaround(event):

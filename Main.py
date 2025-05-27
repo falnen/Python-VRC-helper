@@ -120,7 +120,6 @@ def Settings_view():
             frame.grid_remove()
 def unfocus(event):
     widget = event.widget
-
     try:
         class_name = widget.winfo_class()
 
