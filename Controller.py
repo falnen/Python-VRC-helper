@@ -31,9 +31,9 @@ class Tabi(ttk.Frame):
             StickType = self.stick_type.get()
             title = Title.get()
           
-            if StickType == 'NET': Tabi.Network_events
-            elif StickType == 'VRC': triggers = Tabi.Game_events
-            elif StickType == 'SYS': triggers = Tabi.System_events
+            if StickType == 'NET': self.Network_events
+            elif StickType == 'VRC': triggers = self.Game_events
+            elif StickType == 'SYS': triggers = self.System_events
             elif StickType == 'OSC': triggers = self.Control_parameters
             else: return
             Id = (self.stick_count,StickType)
@@ -56,8 +56,8 @@ class Tabi(ttk.Frame):
                 Title.configure(values=self.Control_parameters)
                 Title.set(self.Control_parameters[0])
             elif self.stick_type.get() == 'VRC':
-                Title.configure(values=Tabi.Game_events,state='readonly')
-                Title.set(Tabi.Game_events[0])
+                Title.configure(values=self.Game_events,state='readonly')
+                Title.set(self.Game_events[0])
             elif self.stick_type.get() == 'SYS':
                 Title.configure(values=self.Control_parameters)
 
@@ -76,8 +76,8 @@ class Tabi(ttk.Frame):
         Header_frame = ttk.Frame(self,padding=0)
 
         Title = ttk.Combobox(Header_frame,width=45)
-        self.Avatar = ttk.Combobox(Header_frame,width=25,values=Tabi.saved_avatars)
-        self.Avatar.configure(postcommand=lambda:self.Avatar.configure(values=Tabi.saved_avatars))
+        self.Avatar = ttk.Combobox(Header_frame,width=25,values=self.saved_avatars)
+        self.Avatar.configure(postcommand=lambda:self.Avatar.configure(values=self.saved_avatars))
         selection1 = ttk.Radiobutton(Header_frame,text='OSC',value='OSC',variable=self.stick_type,command=List_set)
         selection2 = ttk.Radiobutton(Header_frame,text='VRC',value='VRC',variable=self.stick_type,command=List_set)
         #selection3 = ttk.Radiobutton(Header_frame,text='SYS',value='SYS',variable=self.stick_type,command=List_set)
@@ -159,9 +159,9 @@ class Tabi(ttk.Frame):
     def Load(self,Sticks):
         for StickId,data in Sticks.items():
             StickType = data['Type']
-            if StickType == 'NET': Tabi.Network_events
-            elif StickType == 'VRC': triggers = Tabi.Game_events
-            elif StickType == 'SYS': triggers = Tabi.System_events
+            if StickType == 'NET': self.Network_events
+            elif StickType == 'VRC': triggers = self.Game_events
+            elif StickType == 'SYS': triggers = self.System_events
             elif StickType == 'OSC': triggers = self.Control_parameters
 
             Stick = Events.Eventi(self.Stick_space,Id=(StickId,StickType),controller=self,Title=data['Trigger'],triggers=triggers)

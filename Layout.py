@@ -150,3 +150,77 @@ Log_display.bind("<Button-3>", lambda e: "break")
 Log_display.bind("<Control-c>", ctrlC_workaround)
 Log_display_scroll.grid(row=0,column=0,sticky='nse',pady=6,padx=6)
 Log_display.grid(row=0,column=0,sticky='nsew',padx=2,pady=2)
+
+
+class Eventi_layout(ttk.Labelframe):
+    Color = '#FF5F93'
+    def __init__(self,parent,triggers,sticktype,template=None):
+        super().__init__(parent)
+        self.triggers = triggers
+        self.rowconfigure(0,weight=1)
+        self.columnconfigure(0,weight=1)
+
+        self.widgets = {}
+       
+        self.Header_frame = ttk.Frame(self)
+        self.body = ttk.Frame(self)
+        self.Response_list = ttk.Treeview(self.body,columns=['Address','Value','Delay'],selectmode='browse',height=8,style='L.Treeview')
+        self.Trigger = ttk.Combobox(self.Header_frame,justify='center',values=self.triggers,style='Label.TCombobox',width=45,state='disabled')
+        self.sep1 = ttk.Separator(self.body,orient='horizontal')
+        self.sep2 = ttk.Separator(self.body,orient='vertical')
+        self.Condition_label = ttk.Label(self.body,text='Condition',foreground=self.Color,font=('','10'))
+        self.Response_label = ttk.Label(self.body,text='Response',foreground=self.Color,font=('','10'))
+        self.Response_address = ttk.Combobox(self.body)
+        self.Address_label = ttk.Label(self.body,text='Address')
+        self.Response_value = ttk.Entry(self.body,width=8,validate='key')
+        self.Value_label = ttk.Label(self.body,text='Value')
+        self.Response_delay = ttk.Entry(self.body,width=4)
+        self.Delay_label = ttk.Label(self.body,text='Delay')
+        self.Response_save = ttk.Button(self.body,text='Save')
+        self.List_remove = ttk.Button(self.body,text='Remove',width=7,state='disabled')
+        self.List_orderup = ttk.Button(self.body,text='▲',width=2,state='disabled',padding=[2,1,3,1])
+        self.List_orderdown = ttk.Button(self.body,text='▼',width=2,state='disabled',padding=[2,1,3,1])
+        self.List_ordertop = ttk.Button(self.body,text='⩞',width=2,state='disabled',padding=[2,1,3,1])
+        self.List_orderbottom = ttk.Button(self.body,text='⩣',width=2,state='disabled',padding=[2,1,3,1])
+
+        for name, widgetdata in template[sticktype].items():
+            widget = widgetdata['widget'](self.body,**widgetdata.get('params',{}))
+            widget.grid(**widgetdata.get('grid',{}))
+            widget.grid_remove()
+            self.widgets[name] = widget
+
+        if sticktype == 'VRC':self.Response_list.column('#0',anchor='w',minwidth=68,width=68,stretch=False)
+        else: self.Response_list.column('#0',anchor='w',minwidth=68,width=100,stretch=True)
+        self.Response_list.column('Value',anchor='center',width=50,minwidth=50,stretch=False)
+        self.Response_list.column('Delay',anchor='center',width=50,minwidth=50,stretch=False)
+        self.Response_list.column('Address',anchor='w',width=100,minwidth=60)
+        self.Response_list.heading('Address',text='Address',anchor='center')
+        self.Response_list.heading('Value',text='Value')
+        self.Response_list.heading('Delay',text='Delay')
+
+
+        self.Header_frame.grid(row=0,column=0,sticky='nsew')
+        self.body.grid(row=1,column=0,sticky='nsew')
+        self.Header_frame.rowconfigure(0,weight=1)
+        self.Header_frame.columnconfigure(0,weight=1)
+        self.body.rowconfigure([0,1,2,3],weight=1)
+        self.body.columnconfigure([0,1],weight=0,minsize=200)
+        self.body.columnconfigure(2,weight=1)
+        self.sep1.grid(row=0,column=0,sticky='new',columnspan=3)
+        self.sep2.grid(row=0,column=0,sticky='nse',rowspan=4,pady=[0,5])
+        self.Response_list.grid(row=0,column=2,sticky='nsew',rowspan=4)
+        self.Trigger.grid(row=0,column=0,sticky='n')
+        self.Condition_label.grid(row=0,column=0,sticky='n',pady=[5,0])
+        self.Response_label.grid(row=0,column=1,sticky='n',pady=[5,0])
+        self.Response_address.grid(row=1,column=1,sticky='s',pady=[5,0])
+        self.Address_label.grid(row=1,column=1,sticky='n',pady=[0,5])
+        self.Response_value.grid(row=2,column=1,sticky='s',padx=[0,60],pady=[5,0])
+        self.Value_label.grid(row=2,column=1,sticky='n',padx=[0,60],pady=[0,5])
+        self.Response_delay.grid(row=2,column=1,sticky='s',padx=[50,0],pady=[5,0])
+        self.Delay_label.grid(row=2,column=1,sticky='n',padx=[50,0],pady=[0,5])
+        self.Response_save.grid(row=3,column=0,columnspan=2,sticky='s',pady=[0,5])
+        self.List_remove.grid(row=3,column=2,sticky='s',pady=[0,5],padx=[0,0])
+        self.List_orderup.grid(row=3,column=2,sticky='s',pady=[0,8],padx=[0,90])
+        self.List_orderdown.grid(row=3,column=2,sticky='s',pady=[0,8],padx=[90,0])
+        self.List_ordertop.grid(row=3,column=2,sticky='s',pady=[0,8],padx=[0,135])
+        self.List_orderbottom.grid(row=3,column=2,sticky='s',pady=[0,8],padx=[135,0])
