@@ -41,23 +41,27 @@ class Eventi(Eventi_layout):
     number_re = re.compile(r"^-?\d*\.?\d*$")
     REQUIRED_FIELDS = {
             'VRC': {
-                'Notifications': ['user','timestamp', 'message', 'address', 'value', 'delay'],
                 'User join': ['user', 'address', 'value', 'delay'],
                 'User leave': ['user', 'address', 'value', 'delay'],
-                'Friend requests': ['user', 'address', 'value', 'delay'],
                 'Avatar changed': ['user', 'avatar', 'address', 'value', 'delay'],
+                'Invite':['user', 'world', 'address', 'value', 'delay'],
+                'Invite request':['user', 'address', 'value', 'delay'],
+                'Friend requests': ['user', 'address', 'value', 'delay'],
             },
             'OSC': {'*': ['condition', 'address', 'value', 'delay']},
             'SYS': {'*': []},
                 }
     LAYOUT_TEMPLATES = {
         'VRC': {
-            'vrclabel': {'widget': ttk.Label, 'params': {"text":''}, 'grid':{'row':1,'column':0,'sticky':'n','padx':[0,60],'pady':[0,5]}},
+            'name_label': {'widget': ttk.Label, 'params': {'text':'User :','foreground':'', 'font':('','9')}, 'grid':{'row':1,'column':0,'sticky':'n','padx':[0,60],'pady':[0,5]}},
             'name_entry': {'widget': ttk.Entry, 'params': {'width':20}, 'grid':{'row':1,'column':0,'sticky':'s','padx':[0,0],'pady':[0,0]}},
             'any_name': {'widget': ttk.Checkbutton, 'params': {'text':'Any'}, 'grid':{'row':1,'column':0,'sticky':'n','padx':[60,0],'pady':[3,0]}},
             'avatar': {'widget': ttk.Entry, 'params': {}, 'grid':{'row':2,'column':0,'sticky':'s','pady':[0,0]}},
             'avatar_label':{'widget':ttk.Label, 'params': {'text':'Avatar :'}, 'grid':{'row':2,'column':0,'sticky':'n','padx':[0,60],'pady':[0,5]}},
             'any_avatar': {'widget': ttk.Checkbutton, 'params': {'text':'Any'}, 'grid':{'row':2,'column':0,'sticky':'n','padx':[60,0],'pady':[3,0]}},
+            'world': {'widget': ttk.Entry, 'params': {}, 'grid':{'row':2,'column':0,'sticky':'s','pady':[0,0]}},
+            'world_label':{'widget':ttk.Label, 'params': {'text':'World :'}, 'grid':{'row':2,'column':0,'sticky':'n','padx':[0,60],'pady':[0,5]}},
+            'any_world': {'widget': ttk.Checkbutton, 'params': {'text':'Any'}, 'grid':{'row':2,'column':0,'sticky':'n','padx':[60,0],'pady':[3,0]}},
             },
         "OSC": {
                 'value_label': {'widget': ttk.Label, 'params': {'text':'Value'}, 'grid':{'row':2,'column':0,'sticky':'n'}},
@@ -66,13 +70,14 @@ class Eventi(Eventi_layout):
              }
     }
     def  __init__(self,parent,Id,controller,Title,triggers):
-        super().__init__(parent,triggers,Id[1],template=self.LAYOUT_TEMPLATES)
+        super().__init__(parent,Id[1],template=self.LAYOUT_TEMPLATES)
         self.controller = controller
         self.Id = Id
         self.triggers = triggers
         self.stick_data = {}
         self.name_var = ttk.BooleanVar()
         self.avatar_var = ttk.BooleanVar()
+        self.world_var = ttk.BooleanVar()
         self.label = aug(self,'Int')
 
         self.configure(labelwidget=self.label,labelanchor='ne',height=50,style='Tab.TLabelframe')
@@ -80,21 +85,22 @@ class Eventi(Eventi_layout):
         
         self.Response_address.configure(values=controller.Response_parameters)
         self.Response_value.configure(validatecommand=(self.vcmd,'%P'))
-        self.Response_save.configure(command=self.Set)
+        self.Response_save.configure(command=self.Insert_data)
         self.List_remove.configure(command=self.Remove)
         self.List_orderup.configure(command=lambda:self.Move('u'))
         self.List_orderdown.configure(command=lambda:self.Move('d'))
         self.List_ordertop.configure(command=lambda:self.Move('t'))
         self.List_orderbottom.configure(command=lambda:self.Move('b'))
+        self.Trigger.configure(values=triggers)
         self.Trigger.set(Title)
         self.Trigger.bind('<FocusOut>',self.No_empty_trigger)
         self.Trigger.bind('<Enter>',self.unbind_scroll)
         self.Response_list.bind("<<TreeviewSelect>>", self.Response_list_select)
         self.Response_list.bind('<ButtonPress-1>',self.Reset_headings)
         self.Response_address.bind('<Enter>',self.unbind_scroll)
-
+        
         if self.Id[1] == 'OSC':
-            self.Response_list.column('#0',anchor='w',minwidth=68,width=100,stretch=True)
+            self.Response_list.column('#0',anchor='w',minwidth=68,width=68,stretch=False)
             self.Trigger.configure(state='normal')
             self.Response_list.heading('#0',text='Condition',anchor='w')
             self.widgets['condition_entry'].configure(validatecommand=(self.vcmd,'%P'))
@@ -104,36 +110,37 @@ class Eventi(Eventi_layout):
                 widget.grid()
 
         if self.Id[1] == 'VRC':
-            self.Response_list.column('#0',anchor='w',minwidth=68,width=68,stretch=False)
+            self.Response_list.column('#0',anchor='w',minwidth=68,width=100,stretch=True)
             self.widgets['any_name'].configure(variable=self.name_var,command=self.is_user_check)
             self.widgets['any_avatar'].configure(variable=self.avatar_var,command=self.is_ava_check)
-            for widget in self.widgets.values():
-                widget.grid()
+            self.widgets['any_world'].configure(variable=self.world_var,command=self.is_world_check)
             match Title:
-                case 'User joined' | 'User left':
+                case 'User joined' | 'User left' | 'Invite request' | 'Friend requests':
                     self.Response_list.heading('#0',text='Name',anchor='w')
-                    self.widgets['vrclabel'].configure(text='User :',foreground='', font=('','9'))
-                    for name in ('avatar', 'any_avatar'):
+                    for name in ('avatar', 'any_avatar','avatar_label','world','any_world','world_label'):
                         self.widgets.pop(name, None).destroy()
                 case 'Avatar changed':
                     self.Response_list.heading('#0',text='Name : Avatar',anchor='w')
-                    self.widgets['vrclabel'].configure(text='User :',foreground='', font=('','9'))
+                    for name in ('world','any_world','world_label'):
+                        self.widgets.pop(name, None).destroy()
+                case 'Invite':
+                    self.Response_list.heading('#0',text='Name : world',anchor='w')
+                    for name in ('avatar', 'any_avatar','avatar_label'):
+                        self.widgets.pop(name, None).destroy()
     
-            #world_invite = ttk.Radiobutton(self.body,text='World Invite')
             #group_invite = ttk.Radiobutton(self.body,text='Group Invite')
-            #join_request = ttk.Radiobutton(self.body,text='Join Request')
             #group_posts = ttk.Radiobutton(self.body,text='Group Post')
-
-    def Set(self):
+        self.Reset_headings(0)
+    def Insert_data(self):
         stick_type = self.Id[1]
         Trigger = self.Trigger.get()
         entry_type = Eventi.REQUIRED_FIELDS.get(stick_type,{})
         required = entry_type.get(Trigger,entry_type.get('*',[]))
-        self.name_var
         data = {
-            'trigger':self.Trigger.get(),
+            'trigger':Trigger,
             'user':self.widgets['name_entry'].get() if self.widgets.get('name_entry') else None,
-            'avatar':self.widgets['avatar'].get() if self.widgets.get('avatar') and self.Trigger.get() == 'Avatar changed' else None,
+            'avatar':self.widgets['avatar'].get() if self.widgets.get('avatar') and Trigger == 'Avatar changed' else None,
+            'world':self.widgets['world'].get() if self.widgets.get('world') and Trigger == 'Invite' else None,
             'timestamp':None,
             'message':None,
             'condition':self.widgets['condition_entry'].get() if self.widgets.get('condition_entry') else None,
@@ -146,7 +153,9 @@ class Eventi(Eventi_layout):
         if stick_type == 'VRC':
             if self.name_var.get(): data['user'] = 'ANY'
             if self.avatar_var.get(): data['avatar'] = 'ANY'
-            if self.avatar_var.get() == '': data['avatar'] = None
+            if not self.avatar_var.get() : data['avatar'] = None
+            if self.world_var.get(): data['world'] = 'ANY'
+            if not self.world_var.get() : data['world'] = None
         if missing := [key for key in required if not data.get(key)]: return
         
         item = self.Response_list.selection()
@@ -156,12 +165,14 @@ class Eventi(Eventi_layout):
                 self.Response_list.item(item,text=f'{data["conditionOP"]} {data["condition"]}',values=(data['address'],data['value'],data['delay']))
             else: self.stick_data[self.Response_list.insert('','end',text=f'{data["conditionOP"]} {data["condition"]}',values=(data['address'],data['value'],data['delay']))] = data
         elif stick_type == 'VRC':
-            if Trigger == 'Notifications':
-                pass
+            match Trigger:
+                case 'Invite':condition = f'{data['user']} : {data['world']}'
+                case 'Avatar changed':condition = f'{data['user']} : {data['avatar']}'
+                case 'User joined' | 'User left' | 'Invite request' | 'Friend requests':condition = data['user']
             if item:
                 self.stick_data[item[0]] = data
-                self.Response_list.item(item,text=data['user'] if Trigger != 'Avatar changed' else f'{data['user']} : {data['avatar']}',values=(data['address'],data['value'],data['delay']))
-            else: self.stick_data[self.Response_list.insert('','end',text=data['user'] if Trigger != 'Avatar changed' else f'{data['user']} : {data['avatar']}',values=(data['address'],data['value'],data['delay']))] = data
+                self.Response_list.item(item,text=condition,values=(data['address'],data['value'],data['delay']))
+            else: self.stick_data[self.Response_list.insert('','end',text=condition,values=(data['address'],data['value'],data['delay']))] = data
         else:
             print('Error saving:\nUnimplemented Type')
     def Move(self,v):
@@ -197,8 +208,8 @@ class Eventi(Eventi_layout):
     def Reset_headings(self,_):
         Selected_item = self.Response_list.selection()
         if Selected_item:self.Response_list.selection_remove(Selected_item)
-        self.Response_list.column('#0',width=100)
-        self.Response_list.column('Address',width=100)
+        self.Response_list.column('#0',width=68)
+        self.Response_list.column('Address',width=50)
         self.Response_list.column('Value',width=50)
         self.Response_list.column('Delay',width=50)
     def is_user_check(self):
@@ -207,6 +218,9 @@ class Eventi(Eventi_layout):
     def is_ava_check(self):
         if self.avatar_var.get(): self.widgets['avatar'].configure(state='disabled')
         else: self.widgets['avatar'].configure(state='normal')
+    def is_world_check(self):
+        if self.world_var.get(): self.widgets['world'].configure(state='disabled')
+        else: self.widgets['world'].configure(state='normal')
     def unbind_scroll(self,event):
         event.widget.bind("<MouseWheel>", lambda e: 'break')
     def __Validate_osc_entry(self,entry):
@@ -222,8 +236,10 @@ class Eventi(Eventi_layout):
         if datatype[1] == 'OSC':
             self.Response_list.insert('','end',iid=iid,text=f'{Responses["conditionOP"]} {Responses["condition"]}',values=(Responses['address'],Responses['value'],Responses['delay']))
         elif datatype[1] == 'VRC':
-            if Trigger == 'Notifications':
-                pass
-            self.Response_list.insert('','end',iid=iid,text=Responses['user'] if Trigger != 'Avatar changed' else f'{Responses['user']} : {Responses['avatar']}',values=(Responses['address'],Responses['value'],Responses['delay']))
+            match Trigger[1]:
+                case 'Invite':condition = f'{Responses['user']} : {Responses['world']}'
+                case 'Avatar changed':condition = f'{Responses['user']} : {Responses['avatar']}'
+                case 'User joined' | 'User left' | 'Invite request' | 'Friend requests':condition = Responses['user']
+            self.Response_list.insert('','end',iid=iid,text=condition,values=(Responses['address'],Responses['value'],Responses['delay']))
         else:
              print('Error loading:\nUnimplemented Type')

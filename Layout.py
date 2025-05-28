@@ -117,8 +117,6 @@ Ip_entry.grid(row=1,column=0,sticky='nsew',padx=(5,2),pady=(0,5))
 Port_entry = ttk.Entry(Address_frame,justify='center',width=20)
 Port_entry.grid(row=1,column=1,sticky='nsew',padx=(2,5),pady=(0,5))
 
-
-
 if not Ip_entry.get():
     Ip_entry.insert(0,'127.0.0.1')
 
@@ -151,12 +149,10 @@ Log_display.bind("<Control-c>", ctrlC_workaround)
 Log_display_scroll.grid(row=0,column=0,sticky='nse',pady=6,padx=6)
 Log_display.grid(row=0,column=0,sticky='nsew',padx=2,pady=2)
 
-
 class Eventi_layout(ttk.Labelframe):
     Color = '#FF5F93'
-    def __init__(self,parent,triggers,sticktype,template=None):
+    def __init__(self,parent,sticktype,template=None):
         super().__init__(parent)
-        self.triggers = triggers
         self.rowconfigure(0,weight=1)
         self.columnconfigure(0,weight=1)
 
@@ -165,7 +161,7 @@ class Eventi_layout(ttk.Labelframe):
         self.Header_frame = ttk.Frame(self)
         self.body = ttk.Frame(self)
         self.Response_list = ttk.Treeview(self.body,columns=['Address','Value','Delay'],selectmode='browse',height=8,style='L.Treeview')
-        self.Trigger = ttk.Combobox(self.Header_frame,justify='center',values=self.triggers,style='Label.TCombobox',width=45,state='disabled')
+        self.Trigger = ttk.Combobox(self.Header_frame,justify='center',style='Label.TCombobox',width=45,state='disabled')
         self.sep1 = ttk.Separator(self.body,orient='horizontal')
         self.sep2 = ttk.Separator(self.body,orient='vertical')
         self.Condition_label = ttk.Label(self.body,text='Condition',foreground=self.Color,font=('','10'))
@@ -186,30 +182,30 @@ class Eventi_layout(ttk.Labelframe):
         for name, widgetdata in template[sticktype].items():
             widget = widgetdata['widget'](self.body,**widgetdata.get('params',{}))
             widget.grid(**widgetdata.get('grid',{}))
-            widget.grid_remove()
             self.widgets[name] = widget
 
         if sticktype == 'VRC':self.Response_list.column('#0',anchor='w',minwidth=68,width=68,stretch=False)
         else: self.Response_list.column('#0',anchor='w',minwidth=68,width=100,stretch=True)
+        self.Response_list.column('Address',anchor='w',width=100,minwidth=60)
         self.Response_list.column('Value',anchor='center',width=50,minwidth=50,stretch=False)
         self.Response_list.column('Delay',anchor='center',width=50,minwidth=50,stretch=False)
-        self.Response_list.column('Address',anchor='w',width=100,minwidth=60)
         self.Response_list.heading('Address',text='Address',anchor='center')
         self.Response_list.heading('Value',text='Value')
         self.Response_list.heading('Delay',text='Delay')
 
-
-        self.Header_frame.grid(row=0,column=0,sticky='nsew')
-        self.body.grid(row=1,column=0,sticky='nsew')
         self.Header_frame.rowconfigure(0,weight=1)
-        self.Header_frame.columnconfigure(0,weight=1)
+        self.Header_frame.columnconfigure([0,1],weight=0,minsize=200)
+        self.Header_frame.columnconfigure(2,weight=1)
         self.body.rowconfigure([0,1,2,3],weight=1)
         self.body.columnconfigure([0,1],weight=0,minsize=200)
         self.body.columnconfigure(2,weight=1)
+
+        self.Header_frame.grid(row=0,column=0,sticky='nsew')
+        self.body.grid(row=1,column=0,sticky='nsew')
         self.sep1.grid(row=0,column=0,sticky='new',columnspan=3)
         self.sep2.grid(row=0,column=0,sticky='nse',rowspan=4,pady=[0,5])
         self.Response_list.grid(row=0,column=2,sticky='nsew',rowspan=4)
-        self.Trigger.grid(row=0,column=0,sticky='n')
+        self.Trigger.grid(row=0,column=0,columnspan=2,sticky='n')
         self.Condition_label.grid(row=0,column=0,sticky='n',pady=[5,0])
         self.Response_label.grid(row=0,column=1,sticky='n',pady=[5,0])
         self.Response_address.grid(row=1,column=1,sticky='s',pady=[5,0])

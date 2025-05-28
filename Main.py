@@ -30,10 +30,10 @@ def VRC_handler(Event):
     User = Event.get('User')
     Avatar = Event.get('Avatar')
     templates = {
-        'friendRequest': f'{Event_type} from {User}',
-        'group':  f'{Event_type}  message? from {User} at {Event.get('Timestamp')} : {Event.get('Message')}',
-        'invite': f'Received to join {User} in world {Event.get('World')}',
-        'requestInvite':f'Invite requested by {User}',
+        'Friend request': f'{Event_type} from {User}',
+        'Group':  f'{Event_type}  message? from {User} at {Event.get('Timestamp')} : {Event.get('Message')}',
+        'Invite': f'received to join {User} in world {Event.get('World')}',
+        'Invite request':f'from {User}',
         'Avatar changed': f'to ( {Avatar} ) for user ( {User} )',
         'User left': f'{User}',
         'User joined': f'{User}',

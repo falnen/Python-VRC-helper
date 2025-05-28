@@ -6,7 +6,7 @@ from Osc import OSC_client
 
 class Tabi(ttk.Frame):
     saved_avatars = []
-    Game_events = ['User joined','User left','Avatar changed']#'Notifications' 'Friend requests'
+    Game_events = ['User joined','User left','Avatar changed','Invite', 'Invite request', 'Friend requests']#Group invites and notifs todo
     System_events = ['a']
     Network_events = ['b']
     def __init__(self,parent,message_display,data = None, name="New Controller",controller_id=None, destroy=None):
@@ -30,14 +30,13 @@ class Tabi(ttk.Frame):
         def Add_stick():
             StickType = self.stick_type.get()
             title = Title.get()
-          
-            if StickType == 'NET': self.Network_events
-            elif StickType == 'VRC': triggers = self.Game_events
-            elif StickType == 'SYS': triggers = self.System_events
-            elif StickType == 'OSC': triggers = self.Control_parameters
-            else: return
+            match StickType:
+                case 'OSC':triggers = self.Control_parameters
+                case 'VRC':triggers = self.Game_events
+                case 'SYS':triggers = self.System_events
+                case 'NET':triggers = self.Network_events
+
             Id = (self.stick_count,StickType)
-                
             Stick = Events.Eventi(self.Stick_space,Id=Id,controller=self,Title=title,triggers=triggers)
             self.Stick_list[Id[0]] = Stick
             self.stick_count += 1

@@ -55,7 +55,6 @@ def save_state(frames_dict):
         State[name] = {}
         saved_controllers[controller.name] = 1
         for StickId, Stick in controller.Stick_list.items():
-            print(Stick,StickId)
             State[name][StickId] = {'Type':Stick.Id[1],'Trigger':Stick.Trigger.get()}
             responseIds = Stick.Response_list.get_children()
             for response in responseIds:
@@ -63,8 +62,8 @@ def save_state(frames_dict):
                 State[name][StickId][response] = data
     
     check = State.copy()
-    for i in check:
-        if i not in saved_controllers:
+    for i in check.keys():
+        if i not in saved_controllers.keys():
             if i in {'App version','Server'}:
                 continue
             State.pop(i)

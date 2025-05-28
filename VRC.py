@@ -20,6 +20,12 @@ class Log_parser:
         self.search_limit = 0
         #now = datetime.now()
         self.worldname = re.compile(r'worldName=(.*)}')
+        self.event_patterns = {
+            'friendRequest':'Friend request',
+            'group':'Group',
+            'invite':'Invite',
+            'requestInvite':'Invite request',
+        }
         self.repatterns = {
             'User joined' : re.compile(r'\[Behaviour\] Initialized player(?P<User>.*)'),
             'User left' : re.compile(r'\[Behaviour\] OnPlayerLeft (?P<User>.*) \('),
@@ -79,6 +85,7 @@ class Log_parser:
                         elif self.skip == 'Loading':break
                         args = result.groupdict()
                         args.setdefault('Type',condition)
+                        if args.get('Type') in self.event_patterns.keys(): args['Type'] = self.event_patterns[args['Type']]
                         if condition == 'Notification' and args.get('Type') == 'invite': args['World'] = self.worldname.search(args['Details']).group(1)
                         #elif condition == 'Avatar changed' and args.get('User') == self.Local_user: args['Type'] = 'Local avatar'
                         self.handler(args)
