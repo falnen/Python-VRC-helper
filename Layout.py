@@ -18,6 +18,8 @@ Primary = style.colors.get('primary')
 light = style.colors.get('light')
 #----------------------------Styling
 style.layout("TButton", [('Button.border', {'sticky': 'nswe', 'children': [('Button.padding', {'sticky': 'nswe', 'children': [('Button.label', {'sticky': 'nswe'})]})]})])
+style.configure('TButton',foreground='#FF5F93',background='#222222',width=20)
+style.map('TButton',background=[('active','#111111')])
 style.configure('TEntry')
 style.map('TEntry',fieldbackground=[('disabled','#222222')])
 #Settings button layout
@@ -31,11 +33,11 @@ style.map("c.TButton",background=[("active", "#222222")],foreground=[('active',P
 #label combobox
 style.layout('Label.TCombobox',[("Combobox.downarrow",{"side": tk.RIGHT, "sticky": tk.S},),("Combobox.padding",{"expand": "1","sticky": tk.NSEW,"children": [("Combobox.textarea",{"sticky": tk.NSEW},)],},),])
 style.configure('Label.TCombobox',background='#222222')
+style.configure('event.TCombobox',padding=[0,0,0,0])
 style.configure('TCombobox')
 style.map('TCombobox',fieldbackground=[('disabled','#222222')])
 style.configure('TLabelframe',bordercolor='#632646')
-style.configure('TButton',foreground='#FF5F93',background='#222222',width=20)
-style.map('TButton',background=[('active','#111111')])
+
 style.configure("Treeview",rowheight=50,relief='solid')
 style.map('Treeview',foreground=[('selected','#FF5F93'), ('!selected','#FF5F93')],background=[('selected','#171717'),('!selected','#222222')],borderwidth=[('selected',1),('!selected',1),('hover',1)],bordercolor=[('selected','#632646'),('!selected','#632646')])
 style.configure('L.Treeview',rowheight=20)

@@ -1,27 +1,49 @@
 import Layout
 import Controller
 import Persistence
+from Constants import READ_ONLY_PARAMETERS, CONTROLS_LIST
 from Osc import OSC_Listner
 from VRC import Log_parser
 import queue
 
-frames = {} #Key = f"Controller {len(Layout.Object_list.get_children()) + 1}" Value = Ttk.frame object ID.
+frames = {} #Key = f"Controller {len(Layout.Object_list.get_children()) + 1}" Value = ttk.Frame object ID.
 
 State = Persistence.Load_data()
-used_avatars = []
+idlelimit = 0 #meager attemt to limit overhead when no OSC messages are being received.
 
+
+def avatarmatching(avatarname=None,avatarid=None):
+    heldavatarname = Controller.Tabi.avatar_name_hold
+    heldavatarid = Controller.Tabi.avatar_id_hold
+    if heldavatarid and heldavatarname:
+        Controller.Tabi.saved_avatars[heldavatarname] = [heldavatarid,[]]
+        Controller.Tabi.avatar_id_hold = None
+        Controller.Tabi.avatar_name_hold = None
+        #print(heldavatarid,heldavatarname,Controller.Tabi.saved_avatars)
 
 def Server_handler():
     count = 0
     try:
         while count < 30:
             address, message = Server.message_queue.get_nowait()
+            if address =='/avatar/change':
+                if message not in Controller.Tabi.saved_avatars:
+                    Controller.Tabi.avatar_id_hold = message
+                    avatarmatching(avatarid=message)
+            try:
+                if address not in tuple(Controller.Tabi.saved_avatars[VRC_events.avatar][1]) + READ_ONLY_PARAMETERS + CONTROLS_LIST:
+                    Controller.Tabi.saved_avatars[VRC_events.avatar][1].append(address)
+                    print(Controller.Tabi.saved_avatars[VRC_events.avatar][1])
+            except: pass
             Message_display(address,message,text='Received:')
-            for Controller in frames.values():
-                Controller.handler(address=address,OSCmessage=message)
+            for eController in frames.values():
+                eController.handler(address=address,OSCmessage=message)
+                if eController.Avatar.get() == VRC_events.avatar:
+                    if address not in READ_ONLY_PARAMETERS + CONTROLS_LIST + tuple(eController.learned_parameters_filter.get_children()):
+                        eController.learned_parameters_filter.insert('','end',iid=address,text=address)
             count +=1
         Message_display('Message rate exceding capacity!\n','\nPausing for UI Updates...\n',text='\nWarning :')
-        Layout.Root.after_idle(Server_handler)
+        Layout.Root.after_idle(Server_handler,)
     except queue.Empty:
         Layout.Root.after(50,Server_handler)
     
@@ -29,6 +51,11 @@ def VRC_handler(Event):
     Event_type = Event.get('Type')
     User = Event.get('User')
     Avatar = Event.get('Avatar')
+    if Event_type == 'Local avatar':
+        if Avatar not in Controller.Tabi.saved_avatars:
+            Controller.Tabi.avatar_name_hold = Avatar
+            avatarmatching(avatarname=Avatar)
+            return
     templates = {
         'Friend request': f'{Event_type} from {User}',
         'Group':  f'{Event_type}  message? from {User} at {Event.get('Timestamp')} : {Event.get('Message')}',
@@ -39,7 +66,7 @@ def VRC_handler(Event):
         'User joined': f'{User}',
         'Author': f'for avatar ( {Avatar} ) is ( {User} )',
         'User': f'Is {User}',
-        'New avatar': f'{Avatar} Added To Known avatars',
+        'Local avatar': f'{Avatar} Added To Known avatars',
     }
     message = templates.get(Event_type,'err')
     Message_display(address=Event_type,message=message,text='Log event:')

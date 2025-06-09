@@ -3,6 +3,7 @@ import ttkbootstrap as ttk
 import re
 from ttkbootstrap.tooltip import ToolTip
 from Layout import Eventi_layout
+from Constants import LAYOUT_TEMPLATES, REQUIRED_FIELDS
 
 class aug(ttk.Frame):
     def __init__(self,parent,type):
@@ -36,41 +37,10 @@ class aug(ttk.Frame):
         self.parent.controller.stick_count -= 1
         self.parent.controller.Stick_list.pop(self.parent.Id[0])
         self.parent.destroy()
-
+number_re = re.compile(r"^-?(0|[1-9]\d*)(\.\d*)?$")
 class Eventi(Eventi_layout):
-    number_re = re.compile(r"^-?\d*\.?\d*$")
-    REQUIRED_FIELDS = {
-            'VRC': {
-                'User join': ['user', 'address', 'value', 'delay'],
-                'User leave': ['user', 'address', 'value', 'delay'],
-                'Avatar changed': ['user', 'avatar', 'address', 'value', 'delay'],
-                'Invite':['user', 'world', 'address', 'value', 'delay'],
-                'Invite request':['user', 'address', 'value', 'delay'],
-                'Friend requests': ['user', 'address', 'value', 'delay'],
-            },
-            'OSC': {'*': ['condition', 'address', 'value', 'delay']},
-            'SYS': {'*': []},
-                }
-    LAYOUT_TEMPLATES = {
-        'VRC': {
-            'name_label': {'widget': ttk.Label, 'params': {'text':'User :','foreground':'', 'font':('','9')}, 'grid':{'row':1,'column':0,'sticky':'n','padx':[0,60],'pady':[0,5]}},
-            'name_entry': {'widget': ttk.Entry, 'params': {'width':20}, 'grid':{'row':1,'column':0,'sticky':'s','padx':[0,0],'pady':[0,0]}},
-            'any_name': {'widget': ttk.Checkbutton, 'params': {'text':'Any'}, 'grid':{'row':1,'column':0,'sticky':'n','padx':[60,0],'pady':[3,0]}},
-            'avatar': {'widget': ttk.Entry, 'params': {}, 'grid':{'row':2,'column':0,'sticky':'s','pady':[0,0]}},
-            'avatar_label':{'widget':ttk.Label, 'params': {'text':'Avatar :'}, 'grid':{'row':2,'column':0,'sticky':'n','padx':[0,60],'pady':[0,5]}},
-            'any_avatar': {'widget': ttk.Checkbutton, 'params': {'text':'Any'}, 'grid':{'row':2,'column':0,'sticky':'n','padx':[60,0],'pady':[3,0]}},
-            'world': {'widget': ttk.Entry, 'params': {}, 'grid':{'row':2,'column':0,'sticky':'s','pady':[0,0]}},
-            'world_label':{'widget':ttk.Label, 'params': {'text':'World :'}, 'grid':{'row':2,'column':0,'sticky':'n','padx':[0,60],'pady':[0,5]}},
-            'any_world': {'widget': ttk.Checkbutton, 'params': {'text':'Any'}, 'grid':{'row':2,'column':0,'sticky':'n','padx':[60,0],'pady':[3,0]}},
-            },
-        "OSC": {
-                'value_label': {'widget': ttk.Label, 'params': {'text':'Value'}, 'grid':{'row':2,'column':0,'sticky':'n'}},
-                'condition_entry': {'widget': ttk.Entry, 'params':{'width':8,'validate':'key'}, 'grid':{'row':2,'column':0,'sticky':'s'}},
-                'condition_operator': {'widget': ttk.Combobox, 'params':{'values':['=','>','<'],'width':2,'state':'readonly'}, 'grid':{'row':1,'column':0,'sticky':'n'}}
-             }
-    }
     def  __init__(self,parent,Id,controller,Title,triggers):
-        super().__init__(parent,Id[1],template=self.LAYOUT_TEMPLATES)
+        super().__init__(parent,Id[1],template=LAYOUT_TEMPLATES)
         self.controller = controller
         self.Id = Id
         self.triggers = triggers
@@ -82,7 +52,7 @@ class Eventi(Eventi_layout):
 
         self.configure(labelwidget=self.label,labelanchor='ne',height=50,style='Tab.TLabelframe')
         self.vcmd = self.register(self.__Validate_osc_entry)
-        
+
         self.Response_address.configure(values=controller.Response_parameters)
         self.Response_value.configure(validatecommand=(self.vcmd,'%P'))
         self.Response_save.configure(command=self.Insert_data)
@@ -98,7 +68,7 @@ class Eventi(Eventi_layout):
         self.Response_list.bind("<<TreeviewSelect>>", self.Response_list_select)
         self.Response_list.bind('<ButtonPress-1>',self.Reset_headings)
         self.Response_address.bind('<Enter>',self.unbind_scroll)
-        
+
         if self.Id[1] == 'OSC':
             self.Response_list.column('#0',anchor='w',minwidth=68,width=68,stretch=False)
             self.Trigger.configure(state='normal')
@@ -134,10 +104,9 @@ class Eventi(Eventi_layout):
     def Insert_data(self):
         stick_type = self.Id[1]
         Trigger = self.Trigger.get()
-        entry_type = Eventi.REQUIRED_FIELDS.get(stick_type,{})
+        entry_type = REQUIRED_FIELDS.get(stick_type,{})
         required = entry_type.get(Trigger,entry_type.get('*',[]))
         data = {
-            'trigger':Trigger,
             'user':self.widgets['name_entry'].get() if self.widgets.get('name_entry') else None,
             'avatar':self.widgets['avatar'].get() if self.widgets.get('avatar') and Trigger == 'Avatar changed' else None,
             'world':self.widgets['world'].get() if self.widgets.get('world') and Trigger == 'Invite' else None,
@@ -153,9 +122,9 @@ class Eventi(Eventi_layout):
         if stick_type == 'VRC':
             if self.name_var.get(): data['user'] = 'ANY'
             if self.avatar_var.get(): data['avatar'] = 'ANY'
-            if not self.avatar_var.get() : data['avatar'] = None
+            #if not self.avatar_var.get() : data['avatar'] = None
             if self.world_var.get(): data['world'] = 'ANY'
-            if not self.world_var.get() : data['world'] = None
+            #if not self.world_var.get() : data['world'] = None
         if missing := [key for key in required if not data.get(key)]: return
         
         item = self.Response_list.selection()
@@ -224,22 +193,23 @@ class Eventi(Eventi_layout):
     def unbind_scroll(self,event):
         event.widget.bind("<MouseWheel>", lambda e: 'break')
     def __Validate_osc_entry(self,entry):
-        return entry == "" or bool(Eventi.number_re.match(entry)) if self.Response_address.get() != '/avatar/change' else True
+        return entry == "" or bool(number_re.match(entry)) if self.Response_address.get() != '/avatar/change' else True
     def Load(self,data):
-        Responsestuple =  data.popitem()
-        Trigger =  data.popitem()
-        try:datatype = data.popitem()
-        except:return
-        iid = Responsestuple[0]
-        Responses = Responsestuple[1]
-        self.stick_data[iid] = Responses
-        if datatype[1] == 'OSC':
-            self.Response_list.insert('','end',iid=iid,text=f'{Responses["conditionOP"]} {Responses["condition"]}',values=(Responses['address'],Responses['value'],Responses['delay']))
-        elif datatype[1] == 'VRC':
-            match Trigger[1]:
-                case 'Invite':condition = f'{Responses['user']} : {Responses['world']}'
-                case 'Avatar changed':condition = f'{Responses['user']} : {Responses['avatar']}'
-                case 'User joined' | 'User left' | 'Invite request' | 'Friend requests':condition = Responses['user']
-            self.Response_list.insert('','end',iid=iid,text=condition,values=(Responses['address'],Responses['value'],Responses['delay']))
-        else:
-             print('Error loading:\nUnimplemented Type')
+        Trigger =  data.get('Trigger')
+        stick_type = data.get('Type')
+        for iid, responsedata in data.items():
+            if iid in {'Type', 'Trigger'}:
+                continue
+            
+            self.stick_data[iid] = responsedata
+            if stick_type == 'OSC':
+
+                self.Response_list.insert('','end',iid=iid,text=f'{responsedata["conditionOP"]} {responsedata["condition"]}',values=(responsedata['address'],responsedata['value'],responsedata['delay']))
+            elif stick_type == 'VRC':
+                match Trigger:
+                    case 'Invite':condition = f'{responsedata['user']} : {responsedata['world']}'
+                    case 'Avatar changed':condition = f'{responsedata['user']} : {responsedata['avatar']}'
+                    case 'User joined' | 'User left' | 'Invite request' | 'Friend requests':condition = responsedata['user']
+                self.Response_list.insert('','end',iid=iid,text=condition,values=(responsedata['address'],responsedata['value'],responsedata['delay']))
+            else:
+                 print('Error loading:\nUnimplemented Type')

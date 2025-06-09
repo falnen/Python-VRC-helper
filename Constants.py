@@ -1,2 +1,97 @@
-CONTROLS_LIST = ('/avatar/change','/input/MoveForward','/input/MoveBackward','/input/MoveLeft','/input/MoveRight','/input/LookLeft','/input/LookRight','/input/Jump','/input/Run','/input/ComfortLeft','/input/ComfortRight','/input/DropRight','/input/UseRight','/input/GrabRight','/input/DropLeft','/input/UseLeft','/input/GrabLeft','/input/PanicButton','/input/QuickMenuToggleLeft','/input/QuickMenuToggleRight','/input/Voice','/input/Vertical','/input/Horizontal','/input/LookHorizontal','/input/UseAxisRight','/input/GrabAxisRight','/input/MoveHoldFB','/input/SpinHoldCwCcw','/input/SpinHoldUD','/input/SpinHoldLR')
-READ_ONLY_PARAMETERS = ('/avatar/parameters/','/avatar/parameters/Viseme','/avatar/parameters/Voice','/avatar/parameters/Earmuffs','/avatar/parameters/MuteSelf','/avatar/parameters/AFK','/avatar/parameters/GestureLeft','/avatar/parameters/GestureRight','/avatar/parameters/Seated','/avatar/parameters/TrackingType','/avatar/parameters/VRMode','/avatar/parameters/InStation','/avatar/parameters/IsOnFriendsList','/avatar/parameters/Upright','/avatar/parameters/Grounded','/avatar/parameters/IsLocal','/avatar/parameters/PreviewMode','/avatar/parameters/GestureLeftWeight','/avatar/parameters/GestureRightWeight','/avatar/parameters/AngularY','/avatar/parameters/VelocityX','/avatar/parameters/VelocityY','/avatar/parameters/VelocityZ','/avatar/parameters/VelocityMagnitude','/avatar/parameters/AvatarVersion','/avatar/parameters/IsAnimatorEnabled','/avatar/parameters/ScaleModified','/avatar/parameters/ScaleFactor','/avatar/parameters/ScaleFactorInverse','/avatar/parameters/EyeHeightAsMeters','/avatar/parameters/EyeHeightAsPercent')
+import ttkbootstrap as ttk
+GAME_EVENTS = ['User joined','User left','Avatar changed','Invite', 'Invite request', 'Friend requests']#Group invites and notifs todo
+CONTROLS_LIST = (
+    '/avatar/change',
+    '/input/MoveForward',
+    '/input/MoveBackward',
+    '/input/MoveLeft',
+    '/input/MoveRight',
+    '/input/LookLeft',
+    '/input/LookRight',
+    '/input/Jump',
+    '/input/Run',
+    '/input/ComfortLeft',
+    '/input/ComfortRight',
+    '/input/DropRight',
+    '/input/UseRight',
+    '/input/GrabRight',
+    '/input/DropLeft',
+    '/input/UseLeft',
+    '/input/GrabLeft',
+    '/input/PanicButton',
+    '/input/QuickMenuToggleLeft',
+    '/input/QuickMenuToggleRight',
+    '/input/Voice',
+    '/input/Vertical',
+    '/input/Horizontal',
+    '/input/LookHorizontal',
+    '/input/UseAxisRight',
+    '/input/GrabAxisRight',
+    '/input/MoveHoldFB',
+    '/input/SpinHoldCwCcw',
+    '/input/SpinHoldUD',
+    '/input/SpinHoldLR'
+    )
+READ_ONLY_PARAMETERS = (
+    '/avatar/parameters/',
+    '/avatar/parameters/Viseme',
+    '/avatar/parameters/Voice',
+    '/avatar/parameters/Earmuffs',
+    '/avatar/parameters/MuteSelf',
+    '/avatar/parameters/AFK',
+    '/avatar/parameters/GestureLeft',
+    '/avatar/parameters/GestureRight',
+    '/avatar/parameters/Seated',
+    '/avatar/parameters/TrackingType',
+    '/avatar/parameters/VRMode',
+    '/avatar/parameters/InStation',
+    '/avatar/parameters/IsOnFriendsList',
+    '/avatar/parameters/Upright',
+    '/avatar/parameters/Grounded',
+    '/avatar/parameters/IsLocal',
+    '/avatar/parameters/PreviewMode',
+    '/avatar/parameters/GestureLeftWeight',
+    '/avatar/parameters/GestureRightWeight',
+    '/avatar/parameters/AngularY',
+    '/avatar/parameters/VelocityX',
+    '/avatar/parameters/VelocityY',
+    '/avatar/parameters/VelocityZ',
+    '/avatar/parameters/VelocityMagnitude',
+    '/avatar/parameters/AvatarVersion',
+    '/avatar/parameters/IsAnimatorEnabled',
+    '/avatar/parameters/ScaleModified',
+    '/avatar/parameters/ScaleFactor',
+    '/avatar/parameters/ScaleFactorInverse',
+    '/avatar/parameters/EyeHeightAsMeters',
+    '/avatar/parameters/EyeHeightAsPercent'
+    )
+REQUIRED_FIELDS = {
+    'VRC': {
+        'User join': ['user', 'address', 'value', 'delay'],
+        'User leave': ['user', 'address', 'value', 'delay'],
+        'Avatar changed': ['user', 'avatar', 'address', 'value', 'delay'],
+        'Invite':['user', 'world', 'address', 'value', 'delay'],
+        'Invite request':['user', 'address', 'value', 'delay'],
+        'Friend requests': ['user', 'address', 'value', 'delay'],
+    },
+    'OSC': {'*': ['condition', 'address', 'value', 'delay']},
+    'SYS': {'*': []},
+        }
+LAYOUT_TEMPLATES = {
+    'VRC': {
+        'name_label': {'widget': ttk.Label, 'params': {'text':'User :','foreground':'', 'font':('','9')}, 'grid':{'row':1,'column':0,'sticky':'n','padx':[0,60],'pady':[0,5]}},
+        'name_entry': {'widget': ttk.Entry, 'params': {'width':20}, 'grid':{'row':1,'column':0,'sticky':'s','padx':[0,0],'pady':[0,0]}},
+        'any_name': {'widget': ttk.Checkbutton, 'params': {'text':'Any'}, 'grid':{'row':1,'column':0,'sticky':'n','padx':[60,0],'pady':[3,0]}},
+        'avatar': {'widget': ttk.Entry, 'params': {}, 'grid':{'row':2,'column':0,'sticky':'s','pady':[0,0]}},
+        'avatar_label':{'widget':ttk.Label, 'params': {'text':'Avatar :'}, 'grid':{'row':2,'column':0,'sticky':'n','padx':[0,60],'pady':[0,5]}},
+        'any_avatar': {'widget': ttk.Checkbutton, 'params': {'text':'Any'}, 'grid':{'row':2,'column':0,'sticky':'n','padx':[60,0],'pady':[3,0]}},
+        'world': {'widget': ttk.Entry, 'params': {}, 'grid':{'row':2,'column':0,'sticky':'s','pady':[0,0]}},
+        'world_label':{'widget':ttk.Label, 'params': {'text':'World :'}, 'grid':{'row':2,'column':0,'sticky':'n','padx':[0,60],'pady':[0,5]}},
+        'any_world': {'widget': ttk.Checkbutton, 'params': {'text':'Any'}, 'grid':{'row':2,'column':0,'sticky':'n','padx':[60,0],'pady':[3,0]}},
+        },
+    "OSC": {
+            'value_label': {'widget': ttk.Label, 'params': {'text':'Value'}, 'grid':{'row':2,'column':0,'sticky':'n'}},
+            'condition_entry': {'widget': ttk.Entry, 'params':{'width':8,'validate':'key'}, 'grid':{'row':2,'column':0,'sticky':'s'}},
+            'condition_operator': {'widget': ttk.Combobox, 'params':{'values':['=','>','<'],'width':2,'state':'readonly'}, 'grid':{'row':1,'column':0,'sticky':'n'}}
+         }
+}

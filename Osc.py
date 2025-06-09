@@ -22,6 +22,7 @@ class OSC_Listner:
 
     def Msg_handler(self,address,*args):
         value = round(args[0],3) if isinstance(args[0],float) else args[0]
+        if isinstance(value,bool): value = int(value)
         if self.last_message == (address,value):
             return
         self.last_message = (address,value)

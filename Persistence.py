@@ -7,7 +7,7 @@ import Layout
 directory_dir = Path(appdirs.user_data_dir('osc app', 'falnen'))
 directory_dir.mkdir(parents=True, exist_ok=True)
 directory_file = directory_dir.joinpath("Directory.json")
-saved_controllers = {}
+saved_controllers = set()
 
 # get current working directory
 def Directory():
@@ -53,20 +53,17 @@ def save_state(frames_dict):
         controller = frames_dict[id]
         name = controller.name
         State[name] = {}
-        saved_controllers[controller.name] = 1
+        saved_controllers.add(controller.name)
         for StickId, Stick in controller.Stick_list.items():
             State[name][StickId] = {'Type':Stick.Id[1],'Trigger':Stick.Trigger.get()}
             responseIds = Stick.Response_list.get_children()
             for response in responseIds:
                 data = Stick.stick_data[response]
                 State[name][StickId][response] = data
-    
-    check = State.copy()
-    for i in check.keys():
-        if i not in saved_controllers.keys():
-            if i in {'App version','Server'}:
-                continue
-            State.pop(i)
+
+    for key in list(State.keys()):
+        if key not in saved_controllers and key not in {'App version', 'Server'}:
+            del State[key]
 
     with open(app_state_file,'w') as file:
         json.dump(State,file,indent=4)
