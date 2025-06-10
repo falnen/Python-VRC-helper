@@ -28,7 +28,7 @@ class aug(ttk.Frame):
     def Expand(self):
         if self.parent.body.grid_info():
             self.parent.body.grid_remove()
-            self.Expandb.configure(text='➕')
+            self.Expandb.configure(text='◼️')
         else:
             self.parent.body.grid()
             self.Expandb.configure(text='➖')

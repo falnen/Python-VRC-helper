@@ -89,7 +89,7 @@ class Log_parser:
                     args = result.groupdict()
                     args.setdefault('Type',condition)
                     if args.get('Type') in self.event_patterns.keys(): args['Type'] = self.event_patterns[args['Type']]
-                    if condition == 'Notification' and args.get('Type') == 'invite': args['World'] = self.worldname.search(args['Details']).group(1)
+                    if condition == 'Notification' and args.get('Type') == 'Invite': args['World'] = self.worldname.search(args['Details']).group(1)
                     elif condition == 'Avatar changed' and args.get('User') == self.Local_user:
                         args['Type'] = 'Local avatar'
                         self.avatar = args.get('Avatar')

@@ -3,7 +3,6 @@ import json
 import appdirs 
 from shutil import move
 import Layout
-
 directory_dir = Path(appdirs.user_data_dir('osc app', 'falnen'))
 directory_dir.mkdir(parents=True, exist_ok=True)
 directory_file = directory_dir.joinpath("Directory.json")
@@ -49,10 +48,12 @@ def save_state(frames_dict):
         'Path':Layout.location_var.get()
         }
     
+    State['Avatar data'] = list(frames_dict.values())[0].saved_avatars
+    
     for id in Layout.Object_list.get_children():
         controller = frames_dict[id]
         name = controller.name
-        State[name] = {}
+        State[name] = {'Avatar':controller.Avatar.get()}
         saved_controllers.add(controller.name)
         for StickId, Stick in controller.Stick_list.items():
             State[name][StickId] = {'Type':Stick.Id[1],'Trigger':Stick.Trigger.get()}
@@ -62,7 +63,7 @@ def save_state(frames_dict):
                 State[name][StickId][response] = data
 
     for key in list(State.keys()):
-        if key not in saved_controllers and key not in {'App version', 'Server'}:
+        if key not in saved_controllers and key not in {'App version', 'Server', 'Avatar data'}:
             del State[key]
 
     with open(app_state_file,'w') as file:

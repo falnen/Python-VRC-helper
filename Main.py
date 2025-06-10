@@ -1,16 +1,14 @@
 import Layout
 import Controller
-import Persistence
 from Constants import READ_ONLY_PARAMETERS, CONTROLS_LIST
 from Osc import OSC_Listner
 from VRC import Log_parser
+import Persistence
 import queue
 
 frames = {} #Key = f"Controller {len(Layout.Object_list.get_children()) + 1}" Value = ttk.Frame object ID.
 
 State = Persistence.Load_data()
-idlelimit = 0 #meager attemt to limit overhead when no OSC messages are being received.
-
 
 def avatarmatching(avatarname=None,avatarid=None):
     heldavatarname = Controller.Tabi.avatar_name_hold
@@ -33,17 +31,16 @@ def Server_handler():
             try:
                 if address not in tuple(Controller.Tabi.saved_avatars[VRC_events.avatar][1]) + READ_ONLY_PARAMETERS + CONTROLS_LIST:
                     Controller.Tabi.saved_avatars[VRC_events.avatar][1].append(address)
-                    print(Controller.Tabi.saved_avatars[VRC_events.avatar][1])
             except: pass
             Message_display(address,message,text='Received:')
             for eController in frames.values():
+                if eController.Avatar.get() != VRC_events.avatar:continue
                 eController.handler(address=address,OSCmessage=message)
-                if eController.Avatar.get() == VRC_events.avatar:
-                    if address not in READ_ONLY_PARAMETERS + CONTROLS_LIST + tuple(eController.learned_parameters_filter.get_children()):
-                        eController.learned_parameters_filter.insert('','end',iid=address,text=address)
+                if address not in READ_ONLY_PARAMETERS + CONTROLS_LIST + tuple(eController.learned_parameters_filter.get_children()):
+                    eController.learned_parameters_filter.insert('','end',iid=address,text=address)
             count +=1
         Message_display('Message rate exceding capacity!\n','\nPausing for UI Updates...\n',text='\nWarning :')
-        Layout.Root.after_idle(Server_handler,)
+        Layout.Root.after_idle(Server_handler)
     except queue.Empty:
         Layout.Root.after(50,Server_handler)
     
@@ -71,6 +68,8 @@ def VRC_handler(Event):
     message = templates.get(Event_type,'err')
     Message_display(address=Event_type,message=message,text='Log event:')
     for fController in frames.values():
+        if fController.Avatar.get() != VRC_events.avatar:continue
+        print(Event)
         fController.handler(address=Event_type,VRCevent=Event)
 
 def VRC_watcher():
@@ -88,25 +87,31 @@ def Message_display(address,message,text = None):
     Layout.Log_display.yview('end')
     
 def Create_controller(data = None):
+    used_avatars = [frame.controlled_avatar for frame in frames.values()]
+    unused_avatars = [avatar for avatar in Controller.Tabi.saved_avatars if avatar not in used_avatars]
     if data:
         for tab_name,Sticks in data.items():
-            if tab_name in {'App version', 'Server'}:
+            if tab_name in {'App version', 'Server', 'Avatar data'}:
                 continue
             item_id = Layout.Object_list.insert('', 'end', text=tab_name)
-            new_frame = Controller.Tabi(Layout.TabSpace,controller_id=item_id,data=Sticks,message_display=Message_display,name=tab_name,destroy=Destroy_controller)
+            new_frame = Controller.Tabi(Layout.TabSpace,controller_id=item_id,controlled_avatar=data[tab_name]['Avatar'],data=Sticks,message_display=Message_display,name=tab_name,destroy=Destroy_controller)
             frames[item_id] = new_frame
             new_frame.grid(row=0, column=0, sticky='nsew',padx=(0,4),pady=(4,4))
             new_frame.Load(Sticks)
     else:
-        tab_name = f"Controller {len(Layout.Object_list.get_children()) + 1}"
+        if not len(unused_avatars) >=1:
+            return
+        #print(unused_avatars)
+        #tab_name = f"Controller {len(Layout.Object_list.get_children()) + 1}"
+        tab_name = f'{unused_avatars[0]} Controller'
         item_id = Layout.Object_list.insert('', 'end', text=tab_name)
-        new_frame = Controller.Tabi(Layout.TabSpace,controller_id=item_id,message_display=Message_display,name=tab_name,destroy=Destroy_controller)
+        new_frame = Controller.Tabi(Layout.TabSpace,controller_id=item_id,controlled_avatar=unused_avatars[0],message_display=Message_display,name=tab_name,destroy=Destroy_controller)
         frames[item_id] = new_frame
         new_frame.grid(row=0, column=0, sticky='nsew',padx=(0,4),pady=(4,4))
         Layout.Configuration.grid_remove()
 
     for frame in frames.values():
-       frame.lower()
+        frame.lower()
     try:
         Layout.Object_list.selection_set(item_id)
         new_frame.lift()
@@ -168,6 +173,7 @@ Layout.Root.after(1000,Server_handler)
 Layout.Root.after(1000,VRC_watcher)
 VRC_events.Find_user()
 if State:
+    Controller.Tabi.saved_avatars = State.get('Avatar data')
     Layout.Root.after(0,Create_controller(State))
 
 Layout.Root.protocol("WM_DELETE_WINDOW", lambda: (Persistence.save_state(frames), Layout.Root.destroy()))
