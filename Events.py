@@ -3,7 +3,7 @@ import ttkbootstrap as ttk
 import re
 from ttkbootstrap.tooltip import ToolTip
 from Layout import Eventi_layout
-from Constants import LAYOUT_TEMPLATES, REQUIRED_FIELDS
+from Constants import LAYOUT_TEMPLATES, REQUIRED_FIELDS,WIDGET_DATA
 
 class aug(ttk.Frame):
     def __init__(self,parent,type):
@@ -68,6 +68,7 @@ class Eventi(Eventi_layout):
         self.Response_list.bind("<<TreeviewSelect>>", self.Response_list_select)
         self.Response_list.bind('<ButtonPress-1>',self.Reset_headings)
         self.Response_address.bind('<Enter>',self.unbind_scroll)
+        self.Response_address.bind('<<ComboboxSelected>>',self.ava_list_swap)
 
         if self.Id[1] == 'OSC':
             self.Response_list.column('#0',anchor='w',minwidth=68,width=68,stretch=False)
@@ -115,17 +116,19 @@ class Eventi(Eventi_layout):
             'condition':self.widgets['condition_entry'].get() if self.widgets.get('condition_entry') else None,
             'conditionOP': self.widgets['condition_operator'].get() if self.widgets.get('condition_operator') else None,
             'address':self.Response_address.get(),
-            'value':self.Response_value.get(),
+            'value':self.Response_value.get() or self.Response_value_avatars.get(),
             'delay':self.Response_delay.get(),
         }
-        
+
         if stick_type == 'VRC':
             if self.name_var.get(): data['user'] = 'ANY'
             if self.avatar_var.get(): data['avatar'] = 'ANY'
             #if not self.avatar_var.get() : data['avatar'] = None
             if self.world_var.get(): data['world'] = 'ANY'
             #if not self.world_var.get() : data['world'] = None
-        if missing := [key for key in required if not data.get(key)]: return
+        if missing := [key for key in required if not data.get(key)]:
+            print(missing)
+            return
         
         item = self.Response_list.selection()
         if stick_type == 'OSC':
@@ -157,7 +160,23 @@ class Eventi(Eventi_layout):
         if Selected_item := self.Response_list.selection():
             self.Response_list.delete(Selected_item)
     def Response_list_select(self,_):
-        if self.Response_list.selection():
+        item = self.Response_list.selection()
+        if item:
+            values = self.stick_data[item[0]]
+            for data_key,widget_key in WIDGET_DATA.items():
+                value = values.get(data_key)
+                if hasattr(self, widget_key): widget = getattr(self, widget_key)
+                else: widget = self.widgets.get(widget_key)
+                if widget is None: continue
+
+                if isinstance(widget, ttk.Entry):
+                    widget.delete(0, ttk.END)
+                    widget.insert(0, value if value is not None else '')
+                elif isinstance(widget, ttk.Combobox):
+                    widget.set(value if value is not None else '')
+                elif isinstance(widget, ttk.Label):
+                    widget.config(text=value if value is not None else '')
+
             self.Response_save.configure(text='Overwrite')
             self.List_remove.configure(state='normal')
             self.List_orderup.configure(state='normal')
@@ -174,6 +193,18 @@ class Eventi(Eventi_layout):
     def No_empty_trigger(self,_):
         if not self.Trigger.get():
             self.Trigger.set(self.triggers[0])
+    def ava_list_swap(self,_):
+        avatar_info = []
+        if self.Response_address.get() == '/avatar/change':
+            for avatar in self.controller.saved_avatars.keys():
+                avatar_id = self.controller.saved_avatars.get(avatar)[0]
+                avatar_info.append(f'{avatar} ({avatar_id})')
+            self.Response_value.grid_remove()
+            self.Response_value_avatars.configure(values=avatar_info)
+            self.Response_value_avatars.grid(row=2,column=1,sticky='s',padx=[0,62],pady=[5,0])
+        else:
+            self.Response_value_avatars.grid_forget()
+            self.Response_value.grid()
     def Reset_headings(self,_):
         Selected_item = self.Response_list.selection()
         if Selected_item:self.Response_list.selection_remove(Selected_item)

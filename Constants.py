@@ -95,3 +95,13 @@ LAYOUT_TEMPLATES = {
             'condition_operator': {'widget': ttk.Combobox, 'params':{'values':['=','>','<'],'width':2,'state':'readonly'}, 'grid':{'row':1,'column':0,'sticky':'n'}}
          }
 }
+WIDGET_DATA = {
+    'user': 'name_entry',
+    'avatar': 'avatar',
+    'world': 'world',
+    'condition': 'condition_entry',
+    'conditionOP': 'condition_operator',
+    'address': 'Response_address',
+    'value': 'Response_value' or 'Response_value_avatars',
+    'delay': 'Response_delay',
+}

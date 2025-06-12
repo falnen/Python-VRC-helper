@@ -47,21 +47,22 @@ def save_state(frames_dict):
         'Port':Layout.Port_entry.get(),
         'Path':Layout.location_var.get()
         }
-    
-    State['Avatar data'] = list(frames_dict.values())[0].saved_avatars
-    
-    for id in Layout.Object_list.get_children():
-        controller = frames_dict[id]
-        name = controller.name
-        State[name] = {'Avatar':controller.Avatar.get()}
-        saved_controllers.add(controller.name)
-        for StickId, Stick in controller.Stick_list.items():
-            State[name][StickId] = {'Type':Stick.Id[1],'Trigger':Stick.Trigger.get()}
-            responseIds = Stick.Response_list.get_children()
-            for response in responseIds:
-                data = Stick.stick_data[response]
-                State[name][StickId][response] = data
-
+    try:
+        State['Avatar data'] = list(frames_dict.values())[0].saved_avatars
+        
+        for id in Layout.Object_list.get_children():
+            controller = frames_dict[id]
+            name = controller.name
+            State[name] = {'Avatar':controller.Avatar.get()}
+            saved_controllers.add(controller.name)
+            for StickId, Stick in controller.Stick_list.items():
+                State[name][StickId] = {'Type':Stick.Id[1],'Trigger':Stick.Trigger.get()}
+                responseIds = Stick.Response_list.get_children()
+                for response in responseIds:
+                    data = Stick.stick_data[response]
+                    State[name][StickId][response] = data
+    except:
+        pass
     for key in list(State.keys()):
         if key not in saved_controllers and key not in {'App version', 'Server', 'Avatar data'}:
             del State[key]

@@ -10,36 +10,26 @@ frames = {} #Key = f"Controller {len(Layout.Object_list.get_children()) + 1}" Va
 
 State = Persistence.Load_data()
 
-def avatarmatching(avatarname=None,avatarid=None):
-    heldavatarname = Controller.Tabi.avatar_name_hold
-    heldavatarid = Controller.Tabi.avatar_id_hold
-    if heldavatarid and heldavatarname:
-        Controller.Tabi.saved_avatars[heldavatarname] = [heldavatarid,[]]
-        Controller.Tabi.avatar_id_hold = None
-        Controller.Tabi.avatar_name_hold = None
-        #print(heldavatarid,heldavatarname,Controller.Tabi.saved_avatars)
-
 def Server_handler():
     count = 0
     try:
-        while count < 30:
+        while count < 50:
             address, message = Server.message_queue.get_nowait()
             if address =='/avatar/change':
-                if message not in Controller.Tabi.saved_avatars:
-                    Controller.Tabi.avatar_id_hold = message
-                    avatarmatching(avatarid=message)
-            try:
-                if address not in tuple(Controller.Tabi.saved_avatars[VRC_events.avatar][1]) + READ_ONLY_PARAMETERS + CONTROLS_LIST:
-                    Controller.Tabi.saved_avatars[VRC_events.avatar][1].append(address)
-            except: pass
-            Message_display(address,message,text='Received:')
+                if message not in Controller.Tabi.saved_avatars.values() and Controller.Tabi.avatar_name_hold is not None:
+                    Controller.Tabi.saved_avatars[Controller.Tabi.avatar_name_hold] = [message,[]]
+                    Controller.Tabi.avatar_name_hold = None
+            if address not in ('/avatar/parameters/Upright','/avatar/parameters/AngularY','/avatar/parameters/Halo-b_Angle','/avatar/parameters/VelocityZ','/avatar/parameters/VelocityX','/avatar/parameters/VelocityY','/avatar/parameters/VelocityMagnitude','/avatar/parameters/averageTrackerBattery','/avatar/parameters/leftControllerBattery','/avatar/parameters/rightControllerBattery'):
+                Message_display(address,message,text='Received:')
             for eController in frames.values():
-                if eController.Avatar.get() != VRC_events.avatar:continue
+                if eController.Avatar.get() not in [VRC_events.avatar,'Universal']:continue
                 eController.handler(address=address,OSCmessage=message)
-                if address not in READ_ONLY_PARAMETERS + CONTROLS_LIST + tuple(eController.learned_parameters_filter.get_children()):
-                    eController.learned_parameters_filter.insert('','end',iid=address,text=address)
+                try:
+                    if address not in tuple(Controller.Tabi.saved_avatars[VRC_events.avatar][1]) + READ_ONLY_PARAMETERS + CONTROLS_LIST:
+                        Controller.Tabi.saved_avatars[VRC_events.avatar][1].append(address)
+                        eController.learned_parameters_filter.insert('','end',iid=address,text=address)
+                except: pass
             count +=1
-        Message_display('Message rate exceding capacity!\n','\nPausing for UI Updates...\n',text='\nWarning :')
         Layout.Root.after_idle(Server_handler)
     except queue.Empty:
         Layout.Root.after(50,Server_handler)
@@ -51,7 +41,6 @@ def VRC_handler(Event):
     if Event_type == 'Local avatar':
         if Avatar not in Controller.Tabi.saved_avatars:
             Controller.Tabi.avatar_name_hold = Avatar
-            avatarmatching(avatarname=Avatar)
             return
     templates = {
         'Friend request': f'{Event_type} from {User}',
@@ -68,15 +57,14 @@ def VRC_handler(Event):
     message = templates.get(Event_type,'err')
     Message_display(address=Event_type,message=message,text='Log event:')
     for fController in frames.values():
-        if fController.Avatar.get() != VRC_events.avatar:continue
-        print(Event)
+        if fController.Avatar.get() not in [VRC_events.avatar,'Universal']:continue
         fController.handler(address=Event_type,VRCevent=Event)
 
 def VRC_watcher():
     if Nolog := VRC_events.Read_log():
         Message_display('No logs found.','retrying in 30 seconds...','Error:\n')
         delay = 30000
-    else: delay = 1000
+    else: delay = 500
     Layout.Root.after(delay,VRC_watcher)
 
 def Message_display(address,message,text = None):
@@ -173,7 +161,7 @@ Layout.Root.after(1000,Server_handler)
 Layout.Root.after(1000,VRC_watcher)
 VRC_events.Find_user()
 if State:
-    Controller.Tabi.saved_avatars = State.get('Avatar data')
+    if State.get('Avatar data'): Controller.Tabi.saved_avatars = State.get('Avatar data')
     Layout.Root.after(0,Create_controller(State))
 
 Layout.Root.protocol("WM_DELETE_WINDOW", lambda: (Persistence.save_state(frames), Layout.Root.destroy()))

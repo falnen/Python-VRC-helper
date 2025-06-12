@@ -7,7 +7,6 @@ from Osc import OSC_client
 class Tabi(ttk.Frame):
     saved_avatars = {'Universal':[None,[]]}
     avatar_name_hold = None
-    avatar_id_hold = None
     System_events = ['a']
     Network_events = ['b']
     def __init__(self,parent,message_display,controlled_avatar,data = None, name="New Controller",controller_id=None, destroy=None):
@@ -80,7 +79,6 @@ class Tabi(ttk.Frame):
             def_sel = self.default_parameters_filter.selection()
             cu_sel = self.learned_parameters_filter.selection()
 
-
         self.Stick_space = stk.ScrolledFrame(self,style='Tab.TFrame',padding=[5,35,15,0])
         Spacer_frame = ttk.Frame(self,height=14)
         Headder_button = ttk.Button(Spacer_frame,style='c.TButton',text='Collapse',width=8,command=hide)
@@ -151,9 +149,8 @@ class Tabi(ttk.Frame):
 
     def Lookup(self,Stick,OSCmessage=None,VRCevent=None):
         Ids = Stick.Response_list.get_children()
-
-        Received_value = self.normalize(OSCmessage) if OSCmessage else None
-        if not VRCevent: VRCevent = [None,None,None,None,None]
+        Received_value = self.normalize(OSCmessage) if OSCmessage is not None else None
+        if not VRCevent: VRCevent = {}
         for Id in Ids:
             data = Stick.stick_data[Id]
             passed = (
@@ -177,6 +174,9 @@ class Tabi(ttk.Frame):
     def stab(self,value):
         if value.isdigit():
             return int(value)
+        if 'avtr' in value:
+            value = value.split('(')[1].strip(')')
+            return value
         try:
             return float(value)
         except ValueError:
@@ -194,7 +194,6 @@ class Tabi(ttk.Frame):
             return value
 
     def handler(self,address,OSCmessage=None,VRCevent=None):
-        if address ==  'Local player': self.user = VRCevent[0]
         for Stick in self.Stick_list.values():
             user_address = Stick.Trigger.get()
             if address == user_address:
