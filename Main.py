@@ -10,29 +10,27 @@ frames = {} #Key = f"Controller {len(Layout.Object_list.get_children()) + 1}" Va
 
 State = Persistence.Load_data()
 
-def Server_handler():
+def OSC_handler():
     count = 0
     try:
         while count < 50:
             address, message = Server.message_queue.get_nowait()
-            if address =='/avatar/change':
+            if address == '/avatar/change':
                 if message not in Controller.Tabi.saved_avatars.values() and Controller.Tabi.avatar_name_hold is not None:
                     Controller.Tabi.saved_avatars[Controller.Tabi.avatar_name_hold] = [message,[]]
                     Controller.Tabi.avatar_name_hold = None
+            # Temporary filter: Avoids log spam from movement
             if address not in ('/avatar/parameters/Upright','/avatar/parameters/AngularY','/avatar/parameters/Halo-b_Angle','/avatar/parameters/VelocityZ','/avatar/parameters/VelocityX','/avatar/parameters/VelocityY','/avatar/parameters/VelocityMagnitude','/avatar/parameters/averageTrackerBattery','/avatar/parameters/leftControllerBattery','/avatar/parameters/rightControllerBattery'):
-                Message_display(address,message,text='Received:')
+                Layout.Message_display(address,message,text='Received:')
             for eController in frames.values():
+                print(VRC_events.avatar)
                 if eController.Avatar.get() not in [VRC_events.avatar,'Universal']:continue
+                eController.custom_parameters(address)
                 eController.handler(address=address,OSCmessage=message)
-                try:
-                    if address not in tuple(Controller.Tabi.saved_avatars[VRC_events.avatar][1]) + READ_ONLY_PARAMETERS + CONTROLS_LIST:
-                        Controller.Tabi.saved_avatars[VRC_events.avatar][1].append(address)
-                        eController.learned_parameters_filter.insert('','end',iid=address,text=address)
-                except: pass
             count +=1
-        Layout.Root.after_idle(Server_handler)
+        Layout.Root.after_idle(OSC_handler)
     except queue.Empty:
-        Layout.Root.after(50,Server_handler)
+        Layout.Root.after(50,OSC_handler)
     
 def VRC_handler(Event):
     Event_type = Event.get('Type')
@@ -55,45 +53,37 @@ def VRC_handler(Event):
         'Local avatar': f'{Avatar} Added To Known avatars',
     }
     message = templates.get(Event_type,'err')
-    Message_display(address=Event_type,message=message,text='Log event:')
+    Layout.Message_display(address=Event_type,message=message,text='Log event:')
     for fController in frames.values():
         if fController.Avatar.get() not in [VRC_events.avatar,'Universal']:continue
         fController.handler(address=Event_type,VRCevent=Event)
 
 def VRC_watcher():
+    # Unimplemented: 'old log' skipping logic
     if Nolog := VRC_events.Read_log():
-        Message_display('No logs found.','retrying in 30 seconds...','Error:\n')
+        Layout.Message_display('No logs found.','retrying in 30 seconds...','Error:\n')
         delay = 30000
     else: delay = 500
     Layout.Root.after(delay,VRC_watcher)
 
-def Message_display(address,message,text = None):
-    Layout.Log_display.insert('end',f"{text} {address} {message}\n")
-    num_lines = int(Layout.Log_display.index('end-1c').split('.')[0])
-    if num_lines > 500:
-        Layout.Log_display.delete('1.0', '5.0')
-    Layout.Log_display.yview('end')
-    
 def Create_controller(data = None):
-    used_avatars = [frame.controlled_avatar for frame in frames.values()]
+    used_avatars = [frame.Avatar.get() for frame in frames.values()]
     unused_avatars = [avatar for avatar in Controller.Tabi.saved_avatars if avatar not in used_avatars]
     if data:
         for tab_name,Sticks in data.items():
             if tab_name in {'App version', 'Server', 'Avatar data'}:
                 continue
             item_id = Layout.Object_list.insert('', 'end', text=tab_name)
-            new_frame = Controller.Tabi(Layout.TabSpace,controller_id=item_id,controlled_avatar=data[tab_name]['Avatar'],data=Sticks,message_display=Message_display,name=tab_name,destroy=Destroy_controller)
+            new_frame = Controller.Tabi(Layout.TabSpace,controller_id=item_id,controlled_avatar=data[tab_name]['Avatar'],name=tab_name,destroy=Destroy_controller)
             frames[item_id] = new_frame
             new_frame.grid(row=0, column=0, sticky='nsew',padx=(0,4),pady=(4,4))
             new_frame.Load(Sticks)
     else:
         if not len(unused_avatars) >=1:
             return
-        #print(unused_avatars)
-        #tab_name = f"Controller {len(Layout.Object_list.get_children()) + 1}"
         tab_name = f'{unused_avatars[0]} Controller'
         item_id = Layout.Object_list.insert('', 'end', text=tab_name)
-        new_frame = Controller.Tabi(Layout.TabSpace,controller_id=item_id,controlled_avatar=unused_avatars[0],message_display=Message_display,name=tab_name,destroy=Destroy_controller)
+        new_frame = Controller.Tabi(Layout.TabSpace,controller_id=item_id,controlled_avatar=unused_avatars[0],name=tab_name,destroy=Destroy_controller)
         frames[item_id] = new_frame
         new_frame.grid(row=0, column=0, sticky='nsew',padx=(0,4),pady=(4,4))
         Layout.Configuration.grid_remove()
@@ -138,17 +128,16 @@ def Settings_view():
         for frame in frames.values():
             frame.lower()
             frame.grid_remove()
-def unfocus(event):
+def defocus(event):
     widget = event.widget
     try:
         class_name = widget.winfo_class()
-
         if class_name not in ('Text','Button','Treeview','TEntry','TCombobox','Radiobutton','Scrollbar','Spinbox','Listbox'):
             Layout.Root.focus_set()
     except:
         pass      
 
-Layout.Root.bind_all("<Button-1>",unfocus)
+Layout.Root.bind_all("<Button-1>",defocus)
 Layout.Settings_button.configure(command=Settings_view)
 Layout.Add_Tab.configure(command=Create_controller)
 Layout.Object_list.bind("<<TreeviewSelect>>", on_treeview_select)
@@ -157,7 +146,7 @@ Server = OSC_Listner()
 Server.Start_server(Layout.Ip_entry.get(),Layout.Port_entry.get())
 VRC_events = Log_parser(VRC_handler)
 
-Layout.Root.after(1000,Server_handler)
+Layout.Root.after(1000,OSC_handler)
 Layout.Root.after(1000,VRC_watcher)
 VRC_events.Find_user()
 if State:

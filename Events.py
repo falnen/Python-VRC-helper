@@ -53,7 +53,7 @@ class Eventi(Eventi_layout):
         self.configure(labelwidget=self.label,labelanchor='ne',height=50,style='Tab.TLabelframe')
         self.vcmd = self.register(self.__Validate_osc_entry)
 
-        self.Response_address.configure(values=controller.Response_parameters)
+        self.Response_address.configure(values=controller.response_parameters,postcommand=lambda:self.Response_address.configure(values=controller.response_parameters))
         self.Response_value.configure(validatecommand=(self.vcmd,'%P'))
         self.Response_save.configure(command=self.Insert_data)
         self.List_remove.configure(command=self.Remove)
@@ -61,7 +61,7 @@ class Eventi(Eventi_layout):
         self.List_orderdown.configure(command=lambda:self.Move('d'))
         self.List_ordertop.configure(command=lambda:self.Move('t'))
         self.List_orderbottom.configure(command=lambda:self.Move('b'))
-        self.Trigger.configure(values=triggers)
+        self.Trigger.configure(values=triggers,postcommand=lambda:self.Trigger.configure(values=triggers))
         self.Trigger.set(Title)
         self.Trigger.bind('<FocusOut>',self.No_empty_trigger)
         self.Trigger.bind('<Enter>',self.unbind_scroll)

@@ -1,7 +1,8 @@
-import ttkbootstrap as ttk
-from ttkbootstrap.constants import *
 import tkinter as tk
 from tkinter import filedialog
+import ttkbootstrap as ttk
+from ttkbootstrap import scrolled as stk
+from ttkbootstrap.constants import *
 from Persistence import Directory, Update_dir
 
 Root = tk.Tk()
@@ -65,6 +66,13 @@ def ctrlC_workaround(event):
     except tk.TclError:
         pass 
     return "break"
+
+def Message_display(address,message,text = None):
+    Log_display.insert('end',f"{text} {address} {message}\n")
+    num_lines = int(Log_display.index('end-1c').split('.')[0])
+    if num_lines > 500:
+        Log_display.delete('1.0', '5.0')
+    Log_display.yview('end')
 
 #----------------------------Tab area
 TabSpace = ttk.Frame(Root)
@@ -150,6 +158,66 @@ Log_display.bind("<Button-3>", lambda e: "break")
 Log_display.bind("<Control-c>", ctrlC_workaround)
 Log_display_scroll.grid(row=0,column=0,sticky='nse',pady=6,padx=6)
 Log_display.grid(row=0,column=0,sticky='nsew',padx=2,pady=2)
+
+class Tabi_layout(ttk.Frame):
+    def __init__(self,parent):
+        super().__init__(parent)
+        self.columnconfigure(0,weight=1)
+        self.rowconfigure(0,weight=0)
+        self.rowconfigure(1,weight=1)
+
+        self.Stick_space = stk.ScrolledFrame(self,style='Tab.TFrame',padding=[5,35,15,0])
+        Spacer_frame = ttk.Frame(self,height=14)
+        self.Header_button = ttk.Button(Spacer_frame,style='c.TButton',text='Collapse',width=8)
+        Header_seperator = ttk.Separator(self,orient='horizontal',bootstyle='PRIMARY')
+        self.Header_frame = ttk.Frame(self,padding=0)
+        self.Avatar = ttk.Combobox(self.Header_frame,width=25,state='readonly')
+        filterlabel = ttk.Label(self.Header_frame,text='Filter')
+        self.filter = ttk.Entry(self.Header_frame)
+        self.filter_enable = ttk.Button(self.Header_frame,text='Enable',width=8)
+        self.filter_disable = ttk.Button(self.Header_frame,text='Disable',width=8)
+        self.Controller_settings_button = ttk.Button(self.Header_frame,style='setting.TButton',text='❌',width=3,command=lambda:self.kill(self.id))
+        self.default_parameters_filter = ttk.Treeview(self.Header_frame,height=8,style='L.Treeview')
+        self.default_parameters_filter.column('#0',width=240)
+        self.default_parameters_filter.heading('#0',text='Default avatar parameters',anchor='n')
+        self.learned_parameters_filter = ttk.Treeview(self.Header_frame,height=8,style='L.Treeview')
+        self.learned_parameters_filter.column('#0',width=240)
+        self.learned_parameters_filter.heading('#0',text='Custom avatar parameters',anchor='n')
+
+        self.Add_event_button = ttk.Button(self,text='Add Event')
+        self.Title = ttk.Combobox(self,width=30,style='event.TCombobox')
+        self.selection1 = ttk.Radiobutton(self,padding=[2,0,2,0],text='OSC',value='OSC',bootstyle='outline-toolbutton')
+        self.selection2 = ttk.Radiobutton(self,padding=[2,0,2,0],text='VRC',value='VRC',bootstyle='outline-toolbutton')
+        self.selection3 = ttk.Radiobutton(self,padding=[2,0,2,0],text='SYS',value='SYS',bootstyle='outline-toolbutton',state='disabled')
+        self.selection4 = ttk.Radiobutton(self,padding=[2,0,2,0],text='NET',value='NET',bootstyle='outline-toolbutton',state='disabled')
+
+        self.Stick_space.container.configure(style='Tab.TFrame')
+        self.Stick_space.grid(row=1,column=0,sticky='nsew')
+        self.Stick_space.columnconfigure(0,weight=1)
+        self.Stick_space.vscroll.pack_configure(side='right',fill='y',pady=[19,0])
+        self.Stick_space.vscroll.configure(bootstyle='light-round')
+
+        Spacer_frame.grid(row=1,column=0,sticky='new')
+        self.Header_button.pack(side='right',padx=[0,2])
+        Header_seperator.grid(row=1,column=0,sticky='new',pady=14)
+        self.Add_event_button.grid(row=1,column=0,sticky='n')
+        self.Header_frame.grid(row=0,column=0,sticky='nsew')
+        self.Header_frame.rowconfigure([0,1,2,3],weight=1)
+        self.Header_frame.columnconfigure([0,1,3,4],weight=1,uniform='a')
+        self.Header_frame.columnconfigure(2,weight=0)
+        self.selection1.grid(row=1,column=0,sticky='n',padx=[245,0],pady=[5,0])
+        self.selection2.grid(row=1,column=0,sticky='n',padx=[325,0],pady=[5,0])
+        self.selection3.grid(row=1,column=0,sticky='n',padx=[400,0],pady=[5,0])
+        self.selection4.grid(row=1,column=0,sticky='n',padx=[475,0],pady=[5,0])
+        self.Title.grid(row=1,column=0,sticky='n',padx=[0,420],pady=[5,0])
+        self.Avatar.grid(row=0,column=3,sticky='ne')
+        filterlabel.grid(row=1,column=2,pady=[0,10])
+        self.filter.grid(row=1,column=2,sticky='s')
+        self.filter_enable.grid(row=2,column=2,sticky='s',pady=[0,30])
+        self.filter_disable.grid(row=2,column=2,sticky='s')
+        self.default_parameters_filter.grid(row=1,column=0,sticky='nse',columnspan=2,rowspan=3,pady=[0,10])
+        self.learned_parameters_filter.grid(row=1,column=3,sticky='nsw',columnspan=2,rowspan=3,pady=[0,10])
+        self.Controller_settings_button.grid(row=0,column=4,sticky='ne')
 
 class Eventi_layout(ttk.Labelframe):
     Color = '#FF5F93'

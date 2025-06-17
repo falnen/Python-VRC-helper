@@ -41,6 +41,5 @@ class OSC_Listner:
         if self.server:
             self.server.shutdown()
             self.server.server_close()
-            print('closed')
             self.server = None
             self.server_thread = None

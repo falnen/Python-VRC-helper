@@ -18,7 +18,6 @@ class Log_parser:
         self.Local_user = None
         self.avatar = None
         self.search_limit = 0
-        #now = datetime.now()
         self.worldname = re.compile(r'worldName=(.*)}')
         self.event_patterns = {
             'friendRequest':'Friend request',
@@ -69,9 +68,9 @@ class Log_parser:
                         continue
                     if condition == 'SocketError':
                         self.skip = 'sockerr'
-                        break
+                        continue
                     elif self.skip == 'sockerr':
-                        if condition == 'Errorbreak': break
+                        if condition == 'Errorbreak': continue
                         else:
                             self.search_limit += 1
                             if self.search_limit > 2:
@@ -80,12 +79,20 @@ class Log_parser:
                     elif condition == 'Errorbreak': continue
                     elif condition == 'Loading':
                         self.skip = 'Loading'
-                        break
+                        continue
                     elif condition =='Finishedloading':
                         self.skip = 'Normal'
-                        break
-                    elif self.skip == 'Loading':break
-                    
+                        continue
+                    elif self.skip == 'Loading':
+                        if not condition == 'Avatar changed':
+                            continue
+                        args = result.groupdict()
+                        if not args.get('User') == self.Local_user:
+                            continue
+                        args['Type'] = 'Local avatar'
+                        self.avatar = args.get('Avatar')
+                        continue
+
                     args = result.groupdict()
                     args.setdefault('Type',condition)
                     if args.get('Type') in self.event_patterns.keys(): args['Type'] = self.event_patterns[args['Type']]
