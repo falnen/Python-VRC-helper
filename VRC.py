@@ -91,6 +91,7 @@ class Log_parser:
                             continue
                         args['Type'] = 'Local avatar'
                         self.avatar = args.get('Avatar')
+                        self.handler(args)
                         continue
 
                     args = result.groupdict()

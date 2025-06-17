@@ -9,7 +9,6 @@ class Tabi(Tabi_layout):
     avatar_name_hold = None
     System_events = ['a']
     Network_events = ['b']
-
     def __init__(self,parent,controlled_avatar,name="New Controller",controller_id=None, destroy=None):
         super().__init__(parent)
         self.name = name
@@ -96,10 +95,8 @@ class Tabi(Tabi_layout):
 
     def custom_parameters(self,parameter):
         if parameter not in self.control_parameters + self.response_parameters + list(self.learned_parameters_filter.get_children()):
-            print(self.controlled_avatar.get())
             Tabi.saved_avatars[self.controlled_avatar.get()][1].append(parameter)
             self.control_parameters.insert(1,parameter)
-            print(self.control_parameters,'\n',self.response_parameters)
             self.response_parameters.insert(1,parameter)
             self.learned_parameters_filter.insert('','end',iid=parameter,text=parameter)
 

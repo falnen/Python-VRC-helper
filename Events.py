@@ -77,8 +77,6 @@ class Eventi(Eventi_layout):
             self.widgets['condition_entry'].configure(validatecommand=(self.vcmd,'%P'))
             self.widgets['condition_operator'].bind('<Enter>',self.unbind_scroll)
             self.widgets['condition_operator'].set('=')
-            for widget in self.widgets.values():
-                widget.grid()
 
         if self.Id[1] == 'VRC':
             self.Response_list.column('#0',anchor='w',minwidth=68,width=100,stretch=True)

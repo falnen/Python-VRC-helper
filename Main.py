@@ -23,7 +23,6 @@ def OSC_handler():
             if address not in ('/avatar/parameters/Upright','/avatar/parameters/AngularY','/avatar/parameters/Halo-b_Angle','/avatar/parameters/VelocityZ','/avatar/parameters/VelocityX','/avatar/parameters/VelocityY','/avatar/parameters/VelocityMagnitude','/avatar/parameters/averageTrackerBattery','/avatar/parameters/leftControllerBattery','/avatar/parameters/rightControllerBattery'):
                 Layout.Message_display(address,message,text='Received:')
             for eController in frames.values():
-                print(VRC_events.avatar)
                 if eController.Avatar.get() not in [VRC_events.avatar,'Universal']:continue
                 eController.custom_parameters(address)
                 eController.handler(address=address,OSCmessage=message)
@@ -37,7 +36,8 @@ def VRC_handler(Event):
     User = Event.get('User')
     Avatar = Event.get('Avatar')
     if Event_type == 'Local avatar':
-        if Avatar not in Controller.Tabi.saved_avatars:
+        Controller.Tabi.avatar_name_hold = None
+        if Avatar not in Controller.Tabi.saved_avatars.keys():
             Controller.Tabi.avatar_name_hold = Avatar
             return
     templates = {
@@ -101,7 +101,6 @@ def Destroy_controller(ControllerId):
     Layout.Object_list.delete(ControllerId)
     if frames[ControllerId].winfo_exists():
         frames[ControllerId].destroy()
-        #used_avatars.remove(ControllerId)
         frames.pop(ControllerId)
     if itemid in frames:
             Layout.Object_list.selection_set(itemid)
@@ -128,6 +127,7 @@ def Settings_view():
         for frame in frames.values():
             frame.lower()
             frame.grid_remove()
+
 def defocus(event):
     widget = event.widget
     try:
@@ -158,5 +158,3 @@ Layout.Root.protocol("WM_DELETE_WINDOW", lambda: (Persistence.save_state(frames)
 if __name__ == "__main__":
     
     Layout.Root.mainloop()
-    
-    
