@@ -154,7 +154,7 @@ class Tabi(Tabi_layout):
         for StickId,data in Sticks.items():
             if StickId == 'Avatar':continue
             StickType = data['Type']
-            if StickType == 'NET': self.Network_events
+            if StickType == 'NET': triggers = self.Network_events
             elif StickType == 'VRC': triggers = GAME_EVENTS
             elif StickType == 'SYS': triggers = self.System_events
             elif StickType == 'OSC': triggers = self.control_parameters

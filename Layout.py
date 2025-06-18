@@ -14,12 +14,14 @@ Root.columnconfigure(1, weight=1)
 Root.rowconfigure(0, weight=1)
 style = ttk.Style("darkly")
 style.colors.set('primary', '#632646')
+style.colors.set('secondary', '#FF5F93')
 style.colors.set('light', '#82516a')
 Primary = style.colors.get('primary')
+Secondary = style.colors.get('secondary')
 light = style.colors.get('light')
 #----------------------------Styling
 style.layout("TButton", [('Button.border', {'sticky': 'nswe', 'children': [('Button.padding', {'sticky': 'nswe', 'children': [('Button.label', {'sticky': 'nswe'})]})]})])
-style.configure('TButton',foreground='#FF5F93',background='#222222',width=20)
+style.configure('TButton',foreground=Secondary,background='#222222',width=20)
 style.map('TButton',background=[('active','#111111')])
 style.configure('TEntry')
 style.map('TEntry',fieldbackground=[('disabled','#222222')])
@@ -74,6 +76,23 @@ def Message_display(address,message,text = None):
         Log_display.delete('1.0', '5.0')
     Log_display.yview('end')
 
+def validate_ip(P):
+    if P == '' or P.replace('.', '').isdigit():
+        if '..' not in P and not P.startswith('.'): 
+            return True
+    return False
+def validate_port(P):
+    if not P:
+        portvar.set(0)
+        return True
+    if P.isdigit() and 0 <= int(P) <= 65535:
+        return True
+    return False
+vip = Root.register(validate_ip)
+vpo = Root.register(validate_port)
+
+ipvar = ttk.StringVar(value='127.0.0.1')
+portvar = ttk.IntVar(value=9001)
 #----------------------------Tab area
 TabSpace = ttk.Frame(Root)
 TabSpace.columnconfigure(0, weight=1)
@@ -102,15 +121,23 @@ Settings_button.grid(row=1,column=0,sticky='nsew',pady=[2,0])
 #----------------------------Settings
 
 #------Pages
-Configuration = ttk.Notebook(TabSpace)
-Configuration.grid(row=0,column=0,sticky='nsew',padx=(2,4),pady=(4,4))
+Pages = ttk.Notebook(TabSpace)
+Pages.grid(row=0,column=0,sticky='nsew',padx=(2,4),pady=(4,4))
 
 #------Settings page
-Basic_settings = ttk.Frame(Configuration)
-Configuration.add(Basic_settings,text='Settings',sticky='nsew')
+Basic_settings = ttk.Frame(Pages)
+VRC_Settings = ttk.Frame(Pages)
+OSC_Settings = ttk.Frame(Pages)
+Pages.add(Basic_settings,text='App Settings',sticky='nsew')
+Pages.add(OSC_Settings,text='OSC Event Settings',sticky='nsew')
+Pages.add(VRC_Settings,text='VRC Event Settings',sticky='nsew')
 Basic_settings.rowconfigure([0,1],weight=0)
 Basic_settings.rowconfigure(2,weight=1)
 Basic_settings.columnconfigure([0,1,2],weight=1)
+VRC_Settings.rowconfigure(0,weight=1)
+VRC_Settings.columnconfigure(0,weight=1)
+OSC_Settings.rowconfigure(0,weight=1)
+OSC_Settings.columnconfigure(0,weight=1)
 
 #------Address entry
 Address_frame = ttk.Labelframe(Basic_settings,text='ip and ports',labelanchor='n')
@@ -121,17 +148,14 @@ Address_frame.columnconfigure([0,1],weight=1)
 address_label = ttk.Label(Address_frame,text='                    IP                                          Port')
 address_label.grid(row=0,column=0,columnspan=2,sticky='nsew',padx=(5,5))
 
-Ip_entry = ttk.Entry(Address_frame,justify='center',width=20)
+Ip_entry = ttk.Entry(Address_frame,textvariable=ipvar,validate='key',validatecommand=(vip,'%P'),justify='center',width=20)
 Ip_entry.grid(row=1,column=0,sticky='nsew',padx=(5,2),pady=(0,5))
 
-Port_entry = ttk.Entry(Address_frame,justify='center',width=20)
+Port_entry = ttk.Entry(Address_frame,textvariable=portvar,validate='key',validatecommand=(vpo,'%P'),justify='center',width=20)
 Port_entry.grid(row=1,column=1,sticky='nsew',padx=(2,5),pady=(0,5))
 
-if not Ip_entry.get():
-    Ip_entry.insert(0,'127.0.0.1')
-
-if not Port_entry.get():
-    Port_entry.insert(0,'9000')
+Server_set = ttk.Button(Address_frame,text='Set')
+Server_set.grid(row=2,column=0,columnspan=2,sticky='s',pady=[0,5])
 
 #------File Location
 Location_frame = ttk.Labelframe(Basic_settings,text='Config Location',labelanchor='n',padding=10)
@@ -141,7 +165,7 @@ location_label = ttk.Label(Location_frame,textvariable=location_var)
 location_label.grid(row=0,column=1,sticky='n')
 
 Location_button = ttk.Button(Location_frame,text='Change config folder',command=Get_folder)
-Location_button.grid(row=1,column=1,sticky='s')
+Location_button.grid(row=1,column=1,sticky='s',pady=[5,0])
 
 #------Activity log
 
@@ -220,7 +244,6 @@ class Tabi_layout(ttk.Frame):
         self.Controller_settings_button.grid(row=0,column=4,sticky='ne')
 
 class Eventi_layout(ttk.Labelframe):
-    Color = '#FF5F93'
     def __init__(self,parent,sticktype,template=None):
         super().__init__(parent)
         self.rowconfigure(0,weight=1)
@@ -234,8 +257,8 @@ class Eventi_layout(ttk.Labelframe):
         self.Trigger = ttk.Combobox(self.Header_frame,justify='center',style='Label.TCombobox',width=45,state='disabled')
         self.sep1 = ttk.Separator(self.body,orient='horizontal')
         self.sep2 = ttk.Separator(self.body,orient='vertical')
-        self.Condition_label = ttk.Label(self.body,text='Condition',foreground=self.Color,font=('','10'))
-        self.Response_label = ttk.Label(self.body,text='Response',foreground=self.Color,font=('','10'))
+        self.Condition_label = ttk.Label(self.body,text='Condition',foreground=Secondary,font=('','10'))
+        self.Response_label = ttk.Label(self.body,text='Response',foreground=Secondary,font=('','10'))
         self.Response_address = ttk.Combobox(self.body)
         self.Address_label = ttk.Label(self.body,text='Address')
         self.Response_value = ttk.Entry(self.body,width=8,validate='key')

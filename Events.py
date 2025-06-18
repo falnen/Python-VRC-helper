@@ -3,7 +3,7 @@ import ttkbootstrap as ttk
 import re
 from ttkbootstrap.tooltip import ToolTip
 from Layout import Eventi_layout
-from Constants import LAYOUT_TEMPLATES, REQUIRED_FIELDS,WIDGET_DATA
+from Constants import LAYOUT_TEMPLATES, REQUIRED_FIELDS, WIDGET_DATA
 
 class aug(ttk.Frame):
     def __init__(self,parent,type):
@@ -78,7 +78,7 @@ class Eventi(Eventi_layout):
             self.widgets['condition_operator'].bind('<Enter>',self.unbind_scroll)
             self.widgets['condition_operator'].set('=')
 
-        if self.Id[1] == 'VRC':
+        elif self.Id[1] == 'VRC':
             self.Response_list.column('#0',anchor='w',minwidth=68,width=100,stretch=True)
             self.widgets['any_name'].configure(variable=self.name_var,command=self.is_user_check)
             self.widgets['any_avatar'].configure(variable=self.avatar_var,command=self.is_ava_check)
@@ -109,8 +109,8 @@ class Eventi(Eventi_layout):
             'user':self.widgets['name_entry'].get() if self.widgets.get('name_entry') else None,
             'avatar':self.widgets['avatar'].get() if self.widgets.get('avatar') and Trigger == 'Avatar changed' else None,
             'world':self.widgets['world'].get() if self.widgets.get('world') and Trigger == 'Invite' else None,
-            'timestamp':None,
-            'message':None,
+            'timestamp':None,# TODO: maybe implement
+            'message':None, # TODO:implement
             'condition':self.widgets['condition_entry'].get() if self.widgets.get('condition_entry') else None,
             'conditionOP': self.widgets['condition_operator'].get() if self.widgets.get('condition_operator') else None,
             'address':self.Response_address.get(),

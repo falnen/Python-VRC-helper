@@ -60,7 +60,7 @@ class Log_parser:
                 self.last_line = file.tell()
 
                 if not line: break
-                if not line.strip():continue
+                if not line.strip(): continue
 
                 for condition, pattern in self.repatterns.items():
                     result = pattern.search(line)
@@ -68,31 +68,31 @@ class Log_parser:
                         continue
                     if condition == 'SocketError':
                         self.skip = 'sockerr'
-                        continue
+                        break
                     elif self.skip == 'sockerr':
-                        if condition == 'Errorbreak': continue
+                        if condition == 'Errorbreak': break
                         else:
                             self.search_limit += 1
-                            if self.search_limit > 2:
+                            if self.search_limit > 3:
                                 self.search_limit = 0
                                 self.skip = 'Normal'
                     elif condition == 'Errorbreak': continue
                     elif condition == 'Loading':
                         self.skip = 'Loading'
-                        continue
+                        break
                     elif condition =='Finishedloading':
                         self.skip = 'Normal'
-                        continue
+                        break
                     elif self.skip == 'Loading':
                         if not condition == 'Avatar changed':
                             continue
                         args = result.groupdict()
                         if not args.get('User') == self.Local_user:
-                            continue
+                            break
                         args['Type'] = 'Local avatar'
                         self.avatar = args.get('Avatar')
                         self.handler(args)
-                        continue
+                        break
 
                     args = result.groupdict()
                     args.setdefault('Type',condition)
