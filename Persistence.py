@@ -42,29 +42,35 @@ def save_state(frames_dict):
     else:
         State = {"App version":0.1}
 
-    State['Server'] = {
-        'Ip':Layout.Ip_entry.get(),
-        'Port':Layout.Port_entry.get(),
-        'Path':Layout.location_var.get()
+    State['Settings'] = {
+        'r_Ip':Layout.r_ipvar.get(),
+        'r_Port':Layout.r_portvar.get(),
+        's_Ip':Layout.s_ipvar.get(),
+        's_Port':Layout.s_portvar.get(),
+        'Path':Layout.location_var.get(),
+        'Primary-color':Layout.style.colors.get('primary'),
+        'Secondary-color':Layout.style.colors.get('secondary')
         }
     try:
         State['Avatar data'] = list(frames_dict.values())[0].saved_avatars
+        State['Controllers'] = {}
         
         for id in Layout.Object_list.get_children():
             controller = frames_dict[id]
             name = controller.name
-            State[name] = {'Avatar':controller.Avatar.get()}
-            saved_controllers.add(controller.name)
+            State['Controllers'][name] = {'Avatar':controller.Avatar.get()}
+            saved_controllers.add(name)
             for StickId, Stick in controller.Stick_list.items():
-                State[name][StickId] = {'Type':Stick.Id[1],'Trigger':Stick.Trigger.get()}
+                State['Controllers'][name][StickId] = {'Type':Stick.Id[1],'Trigger':Stick.Trigger.get()}
                 responseIds = Stick.Response_list.get_children()
                 for response in responseIds:
                     data = Stick.stick_data[response]
-                    State[name][StickId][response] = data
-    except:
+                    State['Controllers'][name][StickId][response] = data
+    except Exception as e:
+        print(e)
         pass
-    for key in list(State.keys()):
-        if key not in saved_controllers and key not in {'App version', 'Server', 'Avatar data'}:
+    for key in list(State.get('Controllers')):
+        if key not in saved_controllers:# {'App version', 'Settings', 'Controllers', 'Avatar data'}:
             del State[key]
 
     with open(app_state_file,'w') as file:

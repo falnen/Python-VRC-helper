@@ -1,6 +1,6 @@
 import ttkbootstrap as ttk
 import Events
-from Layout import Tabi_layout, Message_display
+from Layout import Tabi_layout, Message_display,s_ipvar,s_portvar
 from Constants import READ_ONLY_PARAMETERS, CONTROLS_LIST,GAME_EVENTS
 from Osc import OSC_client
 
@@ -17,8 +17,7 @@ class Tabi(Tabi_layout):
         self.id = controller_id
         self.kill = destroy
         self.stick_type = ttk.StringVar(value='OSC')
-
-        self.Client = OSC_client('127.0.0.1',9000)
+        self.Client = OSC_client(s_ipvar.get(),s_portvar.get())
 
         self.control_parameters = self.saved_avatars[self.controlled_avatar.get()][1] + list(READ_ONLY_PARAMETERS)
         self.response_parameters = self.saved_avatars[self.controlled_avatar.get()][1] + list(CONTROLS_LIST)
@@ -43,10 +42,10 @@ class Tabi(Tabi_layout):
         def hide():
             if not self.Header_frame.grid_info():
                 self.Header_frame.grid()
-                self.Header_button.configure(text='Collapse')
+                self.Header_button.configure(text='Close')
             else:
                 self.Header_frame.grid_remove()
-                self.Header_button.configure(text='Expand')
+                self.Header_button.configure(text='Config')
 
         def List_set():
             match self.stick_type.get():
@@ -72,19 +71,36 @@ class Tabi(Tabi_layout):
             for parameter in self.saved_avatars[self.Avatar.get()][1]:
                 self.learned_parameters_filter.insert('','end',iid=parameter,text=parameter)
 
+        def add_new_parameter():
+            parameter = self.filter_entry.get()
+            if parameter not in Tabi.saved_avatars[self.controlled_avatar.get()][1]:
+                Tabi.saved_avatars[self.controlled_avatar.get()][1].append(parameter)
+                self.learned_parameters_filter.insert('','end',iid=parameter,text=parameter)
+
+        def forget_parameter():
+            items = self.learned_parameters_filter.selection()
+            for item in items:
+                self.learned_parameters_filter.delete(item)
+                if item in Tabi.saved_avatars[self.controlled_avatar.get()][1]:
+                    Tabi.saved_avatars[self.controlled_avatar.get()][1].remove(item)
+                    self.learned_parameters_filter.delete
+
         def filter_enable():
             def_sel = self.default_parameters_filter.selection()
             cu_sel = self.learned_parameters_filter.selection()
         
         self.Header_button.configure(command=hide)
-        self.Avatar.configure(textvariable=self.controlled_avatar,values=self.saved_avatars)
-        self.Controller_settings_button.configure(command=lambda:self.kill(self.id))
+        self.Avatar.configure(textvariable=self.controlled_avatar,values=list(self.saved_avatars))
+        self.Delete_button.configure(command=lambda:self.kill(self.id))
+        self.Title.configure(postcommand=List_set)
         self.Add_event_button.configure(command=Add_stick)
         self.selection1.configure(variable=self.stick_type,command=List_set)
         self.selection2.configure(variable=self.stick_type,command=List_set)
         self.selection3.configure(variable=self.stick_type,command=List_set)
         self.selection4.configure(variable=self.stick_type,command=List_set)
         self.Avatar.configure(postcommand=lambda:self.Avatar.configure(values=list(self.saved_avatars)))
+        self.Add_parameter.configure(command=add_new_parameter)
+        self.Remove_parameter.configure(command=forget_parameter)
         self.Avatar.bind('<<ComboboxSelected>>',populate_parameter_filter)
         
         for parameter in READ_ONLY_PARAMETERS + CONTROLS_LIST:
@@ -120,7 +136,7 @@ class Tabi(Tabi_layout):
                 )
             if passed:
                 self.after(data['delay'],lambda a=data['address'],r=self.stab(data['value']):self.Client.send_message(a,r))
-                Message_display(data['address'],data['value'],text='Sent:')
+                Message_display(data['address'],self.stab(data['value']),text='Sent:')
 
     def stab(self,value):
         if value.isdigit():
@@ -147,7 +163,7 @@ class Tabi(Tabi_layout):
     def handler(self,address,OSCmessage=None,VRCevent=None):
         for Stick in self.Stick_list.values():
             user_address = Stick.Trigger.get()
-            if address == user_address:
+            if address == user_address and Stick.toggle_var.get() == True:
                 self.Lookup(Stick,OSCmessage=OSCmessage,VRCevent=VRCevent)
 
     def Load(self,Sticks):

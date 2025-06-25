@@ -2,8 +2,11 @@ import tkinter as tk
 from tkinter import filedialog
 import ttkbootstrap as ttk
 from ttkbootstrap import scrolled as stk
+from ttkbootstrap.dialogs import colorchooser
+from ttkbootstrap.style import ThemeDefinition
 from ttkbootstrap.constants import *
 from Persistence import Directory, Update_dir
+from uuid import uuid4
 
 Root = tk.Tk()
 Root.title("app")
@@ -15,43 +18,66 @@ Root.rowconfigure(0, weight=1)
 style = ttk.Style("darkly")
 style.colors.set('primary', '#632646')
 style.colors.set('secondary', '#FF5F93')
-style.colors.set('light', '#82516a')
-Primary = style.colors.get('primary')
+style.colors.set('info', '#333333')
+#Primary = style.colors.get('primary')
 Secondary = style.colors.get('secondary')
-light = style.colors.get('light')
+style.colors.set('light', style.colors.update_hsv(Secondary,sd=-0.3,vd=-0.3))
+#light = style.colors.get('light')
+#dark = style.colors.get('dark')
 #----------------------------Styling
-style.layout("TButton", [('Button.border', {'sticky': 'nswe', 'children': [('Button.padding', {'sticky': 'nswe', 'children': [('Button.label', {'sticky': 'nswe'})]})]})])
-style.configure('TButton',foreground=Secondary,background='#222222',width=20)
-style.map('TButton',background=[('active','#111111')])
-style.configure('TEntry')
-style.map('TEntry',fieldbackground=[('disabled','#222222')])
-#Settings button layout
-style.layout("setting.TButton", [('Button.label', {'sticky': 'nswe'})])
-style.configure("setting.TButton",background='#222222',relief="flat",font=("", 18))
-style.map("setting.TButton",background=[("active", "#222222")],foreground=[('active',Primary)])
-#other button
-style.layout("c.TButton", [('Button.label', {'sticky': 'nswe'})])
-style.configure("c.TButton",background='#222222',relief="flat",font=("", 10,))
-style.map("c.TButton",background=[("active", "#222222")],foreground=[('active',Primary)])
-#label combobox
-style.layout('Label.TCombobox',[("Combobox.downarrow",{"side": tk.RIGHT, "sticky": tk.S},),("Combobox.padding",{"expand": "1","sticky": tk.NSEW,"children": [("Combobox.textarea",{"sticky": tk.NSEW},)],},),])
-style.configure('Label.TCombobox',background='#222222')
-style.configure('event.TCombobox',padding=[0,0,0,0])
-style.configure('TCombobox')
-style.map('TCombobox',fieldbackground=[('disabled','#222222')])
-style.configure('TLabelframe',bordercolor='#632646')
+def style_widgets():
+    style_widgets.Primary = style.colors.get('primary')
+    style_widgets.Secondary = style.colors.get('secondary')
+    style_widgets.danger = style.colors.get('danger')
+    style_widgets.light = style.colors.get('light')
+    style_widgets.dark = style.colors.get('dark')
+    style.layout("TButton", [('Button.border', {'sticky': 'nswe', 'children': [('Button.padding', {'sticky': 'nswe', 'children': [('Button.label', {'sticky': 'nswe'})]})]})])
+    style.configure('TButton',foreground=style_widgets.Secondary,background='#222222',bordercolor = style_widgets.Primary,width=20)
+    style.map('TButton',background=[('active','#111111')])
+    style.layout("danger.TButton", [('Button.border', {'sticky': 'nswe', 'children': [('Button.padding', {'sticky': 'nswe', 'children': [('Button.label', {'sticky': 'nswe'})]})]})])
+    style.configure('danger.TButton',foreground=style_widgets.danger,background='#222222',width=20)
+    style.map('danger.TButton',background=[('active','#111111')])
+    style.configure('TEntry')
+    style.map('TEntry',fieldbackground=[('disabled','#222222')])
+    #Settings button layout
+    style.layout("setting.TButton", [('Button.label', {'sticky': 'nswe'})])
+    style.configure("setting.TButton",background='#222222',relief="flat",font=("", 16))
+    style.map("setting.TButton",background=[("active", "#222222")],foreground=[('active',style_widgets.Primary)])
+    #other button
+    style.layout("c.TButton", [('Button.label', {'sticky': 'nswe'})])
+    style.configure("c.TButton",background='#222222',relief="flat",font=("", 10,))
+    style.map("c.TButton",background=[("active", "#222222")],foreground=[('active',style_widgets.Primary)])
+    #otherother button
+    style.layout("pop.TButton", [('Button.border', {'sticky': 'nswe', 'border': '1', 'children': [('Button.focus', {'sticky': 'nswe', 'children': [('Button.padding', {'sticky': 'nswe', 'children': [('Button.label', {'sticky': 'nswe'})]})]})]})])
+    style.configure("pop.TButton",background='#171717',relief="flat",font=("", 10,))
+    style.map("pop.TButton",foreground=[('active',style_widgets.Secondary), ('!active',style_widgets.Secondary)],background=[('active','#070707'),('!active','#171717')])
+    #label combobox
+    style.layout('Label.TCombobox',[("Combobox.downarrow",{"side": tk.RIGHT, "sticky": tk.S},),("Combobox.padding",{"expand": "1","sticky": tk.NSEW,"children": [("Combobox.textarea",{"sticky": tk.NSEW},)],},),])
+    style.configure('Label.TCombobox',background='#222222')
+    style.configure('event.TCombobox',padding=[0,0,0,0])
+    style.map('TCombobox',fieldbackground=[('disabled','#222222')])
+    style.configure('TLabelframe',bordercolor=style_widgets.Primary,lightcolor=style_widgets.Primary,darkcolor=style_widgets.Primary)
 
-style.configure("Treeview",rowheight=50,relief='solid')
-style.map('Treeview',foreground=[('selected','#FF5F93'), ('!selected','#FF5F93')],background=[('selected','#171717'),('!selected','#222222')],borderwidth=[('selected',1),('!selected',1),('hover',1)],bordercolor=[('selected','#632646'),('!selected','#632646')])
-style.configure('L.Treeview',rowheight=20)
-style.configure('VL.Treeview',rowheight=25)
-style.configure('Tab.TFrame',background='#171717')
-style.configure('Tab.TLabelframe',background='#171717',labeloutside=True)
-style.configure('Tab.TLabelframe.Label',background='#171717')
-style.configure('Tab.TNotebook',tabposition='wn',tabmargins=[0,10,0,10])
-style.configure('Tab.TNotebook.Tab')
+    style.configure('alt.TLabel',foreground=style_widgets.Secondary,background='#171717',font=('','10'))
+    style.configure('alt2.TLabel',foreground=style_widgets.Secondary,background='#222222',font=('','10'))
+
+    style.configure("Treeview",rowheight=50,relief='solid')
+    style.map('Treeview',foreground=[('selected',style_widgets.Secondary), ('!selected',style_widgets.Secondary)],background=[('selected','#171717'),('!selected','#222222')],borderwidth=[('selected',1),('!selected',1),('hover',1)],bordercolor=[('selected',style_widgets.Primary),('!selected',style_widgets.Primary)])
+    style.configure('L.Treeview',rowheight=20)
+    style.configure('VL.Treeview',rowheight=25)
+    style.configure('Tab.TFrame',background='#171717')
+    style.configure('pop.TFrame',background=style_widgets.Primary)
+    style.configure('Tab.TLabelframe',background='#171717',bordercolor=style_widgets.Primary,lightcolor=style_widgets.Primary,darkcolor=style_widgets.Primary,labeloutside=True)
+    style.configure('Tab.TLabelframe.Label',background='#171717')
+    style.configure('Tab.TNotebook',tabposition='wn',tabmargins=[0,10,0,10])
+    style.configure('TSeparator',background=style_widgets.Primary)
+    style.configure('TCheckbutton',indicatorcolor=style_widgets.Primary)
+style_widgets()
 #----------------------------Functions
 location_var = ttk.StringVar(value=Directory())
+parameter_collect = ttk.BooleanVar(value=True)
+VRC_Toggle = ttk.BooleanVar(value=True)
+menu_buttons = {}
 
 def Get_folder():
     Selected_Folder = filedialog.askdirectory(mustexist=True,)
@@ -76,23 +102,82 @@ def Message_display(address,message,text = None):
         Log_display.delete('1.0', '5.0')
     Log_display.yview('end')
 
+def show_custom_menu():
+    bx = Add_controller.winfo_rootx()
+    by = Add_controller.winfo_rooty() + Add_controller.winfo_height()
+    menu_win.deiconify()
+    menu_win.focus()
+    menu_win.geometry(f"+{bx}+{by}")
+
+def insert_avatar_button(avatar):
+    if avatar not in menu_buttons.keys():
+        avatar_button = ttk.Button(pop_frame,text=avatar,style='pop.TButton')
+        avatar_button.pack(padx=2, pady=2,fill='both')
+        menu_buttons[avatar] = avatar_button
+        return avatar_button
+
+def app_color_set(initcolor,var):
+    '''
+    I hate this.
+    Copied the mothod from the ttkbootstrap example app, but it throws an error on occasion.
+    I plan to rebuild this in the future.
+    '''
+    Color_pop.initialcolor = initcolor
+    if var != 3:
+        Color_pop.show(wait_for_result=True)
+        retcolor = Color_pop.result
+    else:retcolor ='#ffffff'
+    if not retcolor:return
+    #if var == 1:
+    #    style.colors.set('primary', retcolor.hex)
+    #elif var ==2:
+    #    style.colors.set('secondary', retcolor.hex)
+    #    style.colors.set('light', style.colors.update_hsv(retcolor.hex,sd=-0.3,vd=-0.3))
+    #Root.after(50,style_widgets())
+    try:
+        if var == 1:
+            style.colors.set('primary', retcolor.hex)
+        elif var ==2:
+            style.colors.set('secondary', retcolor.hex)
+            style.colors.set('light', style.colors.update_hsv(retcolor.hex,sd=-0.3,vd=-0.3))
+        elif var == 3:
+            style.colors.set('light', style.colors.update_hsv(style.colors.get('secondary'),sd=-0.3,vd=-0.3))
+        colors = {label: style.colors.get(label) for label in style.colors.label_iter()}
+        themename = "temp_" + str(uuid4()).replace("-", "")[:10]
+        definition = ThemeDefinition(themename, colors, style.theme.type)
+        style.register_theme(definition)
+        style.theme_use(themename)
+        Root.after(50,style_widgets())
+    except Exception as e:
+        pass
+
 def validate_ip(P):
     if P == '' or P.replace('.', '').isdigit():
         if '..' not in P and not P.startswith('.'): 
             return True
     return False
-def validate_port(P):
+def validate_r_port(P):
     if not P:
-        portvar.set(0)
+        r_portvar.set(0)
+        return True
+    if P.isdigit() and 0 <= int(P) <= 65535:
+        return True
+    return False
+def validate_s_port(P):
+    if not P:
+        s_portvar.set(0)
         return True
     if P.isdigit() and 0 <= int(P) <= 65535:
         return True
     return False
 vip = Root.register(validate_ip)
-vpo = Root.register(validate_port)
+vrpo = Root.register(validate_r_port)
+vspo = Root.register(validate_s_port)
 
-ipvar = ttk.StringVar(value='127.0.0.1')
-portvar = ttk.IntVar(value=9001)
+r_ipvar = ttk.StringVar(value='127.0.0.1')
+r_portvar = ttk.IntVar(value=9001)
+s_ipvar = ttk.StringVar(value='127.0.0.1')
+s_portvar = ttk.IntVar(value=9000)
 #----------------------------Tab area
 TabSpace = ttk.Frame(Root)
 TabSpace.columnconfigure(0, weight=1)
@@ -101,22 +186,24 @@ TabSpace.grid(row=0,column=1,sticky="nsew",)
 
 #----------------------------Tab List
 Object_list = ttk.Treeview(Root,show='tree',height=6,selectmode='browse',style='Treeview')
-Object_list.grid(column=0, row=0, sticky='nsw', pady=(4,4),padx=(4,0))
-
-#------Button BG
-button_bg = ttk.Frame(Root,padding=2)
-button_bg.grid(row=0,column=0,sticky='sew',padx=[8,4],pady=[0,8])
-button_bg.columnconfigure(0,weight=1)
-button_bg.rowconfigure(0,weight=1,minsize=35)
-button_bg.rowconfigure(1,weight=1,minsize=35)
+Object_list.grid(column=0, row=0, sticky='nsw', pady=(4,85),padx=(4,0))
 
 #------New tab button
-Add_Tab = ttk.Button(button_bg,text='Add New Controler')
-Add_Tab.grid(row=0,column=0,sticky='nsew',pady=[0,2])
+Add_controller = ttk.Button(Root,text='Add New Controler',padding=8,command=show_custom_menu)
+menu_win = tk.Toplevel(Root,bg='#222222')
+menu_win.overrideredirect(True)
+menu_win.withdraw()
+menu_win.bind('<FocusOut>',lambda event:Root.after(100, menu_win.withdraw))
+
+pop_frame = ttk.Frame(menu_win,style='pop.TFrame')
+pop_frame.pack()
+btn = ttk.Button(pop_frame, text='*Future Manual Entry*', style='pop.TButton', command=menu_win.withdraw)
+btn.pack(padx=2, pady=2)
+Add_controller.grid(row=0,column=0,sticky='sew',padx=[4,0],pady=[0,45])
 
 #------Settings Button
-Settings_button = ttk.Button(button_bg,text='Settings')
-Settings_button.grid(row=1,column=0,sticky='nsew',pady=[2,0])
+Settings_button = ttk.Button(Root,text='Settings',padding=8)
+Settings_button.grid(row=0,column=0,sticky='sew',padx=[4,0],pady=[0,4])
 
 #----------------------------Settings
 
@@ -124,42 +211,75 @@ Settings_button.grid(row=1,column=0,sticky='nsew',pady=[2,0])
 Pages = ttk.Notebook(TabSpace)
 Pages.grid(row=0,column=0,sticky='nsew',padx=(2,4),pady=(4,4))
 
-#------Settings page
+#------Settings pages
 Basic_settings = ttk.Frame(Pages)
 VRC_Settings = ttk.Frame(Pages)
 OSC_Settings = ttk.Frame(Pages)
-Pages.add(Basic_settings,text='App Settings',sticky='nsew')
-Pages.add(OSC_Settings,text='OSC Event Settings',sticky='nsew')
-Pages.add(VRC_Settings,text='VRC Event Settings',sticky='nsew')
+Pages.add(Basic_settings,text='General',sticky='nsew')
+Pages.add(OSC_Settings,text='OSC',sticky='nsew')
+Pages.add(VRC_Settings,text='VRC',sticky='nsew')
 Basic_settings.rowconfigure([0,1],weight=0)
 Basic_settings.rowconfigure(2,weight=1)
 Basic_settings.columnconfigure([0,1,2],weight=1)
 VRC_Settings.rowconfigure(0,weight=1)
-VRC_Settings.columnconfigure(0,weight=1)
-OSC_Settings.rowconfigure(0,weight=1)
-OSC_Settings.columnconfigure(0,weight=1)
+VRC_Settings.columnconfigure([0,1,2],weight=1)
+OSC_Settings.rowconfigure([0,1,2],weight=1)
+OSC_Settings.columnconfigure([0,1,2],weight=1)
+
+#--------------------OSC Configuration
 
 #------Address entry
-Address_frame = ttk.Labelframe(Basic_settings,text='ip and ports',labelanchor='n')
+Address_frame = ttk.Labelframe(OSC_Settings,text='OSC Address',labelanchor='n')
 Address_frame.grid(row=0,column=1,sticky='n',pady=(0,0))
-Address_frame.rowconfigure([0,1],weight=1)
-Address_frame.columnconfigure([0,1],weight=1)
+Address_frame.rowconfigure([0,1,2,3,3,4,5],weight=1)
+Address_frame.columnconfigure([0,1,2],weight=1)
 
 address_label = ttk.Label(Address_frame,text='                    IP                                          Port')
-address_label.grid(row=0,column=0,columnspan=2,sticky='nsew',padx=(5,5))
+address_label.grid(row=2,column=0,columnspan=3,sticky='nsew',padx=(5,5),pady=[0,5])
 
-Ip_entry = ttk.Entry(Address_frame,textvariable=ipvar,validate='key',validatecommand=(vip,'%P'),justify='center',width=20)
-Ip_entry.grid(row=1,column=0,sticky='nsew',padx=(5,2),pady=(0,5))
+receive_label = ttk.Label(Address_frame,text='Receive',style='alt2.TLabel')
+receive_label.grid(row=0,column=0,columnspan=3)
+send_label = ttk.Label(Address_frame,text='Send',style='alt2.TLabel')
+send_label.grid(row=2,column=0,columnspan=3)
+temp_label = ttk.Label(Address_frame,text='Changing the Send address or port\ncurrently requires an app restart')
+temp_label.grid(row=4,column=0,columnspan=3)
 
-Port_entry = ttk.Entry(Address_frame,textvariable=portvar,validate='key',validatecommand=(vpo,'%P'),justify='center',width=20)
-Port_entry.grid(row=1,column=1,sticky='nsew',padx=(2,5),pady=(0,5))
+rIp_entry = ttk.Entry(Address_frame,textvariable=r_ipvar,validate='key',validatecommand=(vip,'%P'),justify='center',width=20)
+rIp_entry.grid(row=1,column=0,sticky='nsew',padx=(5,2),pady=(0,5))
+rPort_entry = ttk.Entry(Address_frame,textvariable=r_portvar,validate='key',validatecommand=(vrpo,'%P'),justify='center',width=20)
+rPort_entry.grid(row=1,column=2,columnspan=2,sticky='nsew',padx=(2,5),pady=(0,5))
+
+sIp_entry = ttk.Entry(Address_frame,textvariable=s_ipvar,validate='key',validatecommand=(vip,'%P'),justify='center',width=20)
+sIp_entry.grid(row=3,column=0,sticky='nsew',padx=(5,2),pady=(0,5))
+sPort_entry = ttk.Entry(Address_frame,textvariable=s_portvar,validate='key',validatecommand=(vspo,'%P'),justify='center',width=20)
+sPort_entry.grid(row=3,column=2,columnspan=2,sticky='nsew',padx=(2,5),pady=(0,5))
 
 Server_set = ttk.Button(Address_frame,text='Set')
-Server_set.grid(row=2,column=0,columnspan=2,sticky='s',pady=[0,5])
+Server_set.grid(row=5,column=0,columnspan=3,sticky='s',pady=[0,5])
+#------VRC
+VRC_config_frame = ttk.Labelframe(VRC_Settings,text='Options',labelanchor='n',padding=8)
+VRC_config_frame.grid(row=0,column=1,sticky='n',pady=(0,0))
+VRC_config_frame.rowconfigure([0,1],weight=1)
+VRC_config_frame.columnconfigure([0,1],weight=1)
+
+vrc_enable = ttk.Checkbutton(VRC_config_frame,variable=VRC_Toggle,text='VRC Log Parser.\nDisabling this option will cause the VRC Events to not work',bootstyle='round-toggle')
+vrc_enable.grid(row=0,column=0)
+#------OSC
+OSC_config_frame = ttk.Labelframe(OSC_Settings,text='Options',labelanchor='n',padding=8)
+OSC_config_frame.grid(row=1,column=1,sticky='n',pady=(0,0))
+OSC_config_frame.rowconfigure([0,1],weight=1)
+OSC_config_frame.columnconfigure([0,1],weight=1)
+
+acap = ttk.Checkbutton(OSC_config_frame,variable=parameter_collect,text='Automatic Avatar Parameter Collection',bootstyle='round-toggle')
+acap.grid(row=0,column=0)
+
+#------OSC Event config
+
+
 
 #------File Location
 Location_frame = ttk.Labelframe(Basic_settings,text='Config Location',labelanchor='n',padding=10)
-Location_frame.grid(row=1,column=0,columnspan=3,sticky='n')
+Location_frame.grid(row=0,column=0,columnspan=3,sticky='n')
 
 location_label = ttk.Label(Location_frame,textvariable=location_var)
 location_label.grid(row=0,column=1,sticky='n')
@@ -167,8 +287,22 @@ location_label.grid(row=0,column=1,sticky='n')
 Location_button = ttk.Button(Location_frame,text='Change config folder',command=Get_folder)
 Location_button.grid(row=1,column=1,sticky='s',pady=[5,0])
 
-#------Activity log
+#------Color selections
+Color_pop = colorchooser.ColorChooserDialog(Root,title='Pallet')
 
+Color_frame = ttk.Labelframe(Basic_settings,text='Theme Colors',labelanchor='n',padding=10)
+Color_frame.grid(row=1,column=0,columnspan=3,sticky='n')
+
+Color_label = ttk.Label(Color_frame,text='Change Theme Colors')
+Color_label.grid(row=0,column=0,sticky='n',columnspan=2)
+
+Color_button = ttk.Button(Color_frame,text='Primary',width=10,command=lambda : app_color_set(style_widgets.Primary,1))
+Color_button.grid(row=1,column=0,sticky='s',padx=[5,5],pady=[5,0])
+
+Color_button2 = ttk.Button(Color_frame,text='Secondary',width=10,command=lambda : app_color_set(style_widgets.Secondary,2))
+Color_button2.grid(row=1,column=1,sticky='s',padx=[5,5],pady=[5,0])
+
+#------Activity log
 Log_frame = ttk.Frame(Basic_settings)
 Log_frame.rowconfigure(0,weight=1)
 Log_frame.columnconfigure(0,weight=1)
@@ -192,16 +326,22 @@ class Tabi_layout(ttk.Frame):
 
         self.Stick_space = stk.ScrolledFrame(self,style='Tab.TFrame',padding=[5,35,15,0])
         Spacer_frame = ttk.Frame(self,height=14)
-        self.Header_button = ttk.Button(Spacer_frame,style='c.TButton',text='Collapse',width=8)
+        self.Header_button = ttk.Button(Spacer_frame,style='c.TButton',text='Config',width=8)
         Header_seperator = ttk.Separator(self,orient='horizontal',bootstyle='PRIMARY')
         self.Header_frame = ttk.Frame(self,padding=0)
-        self.Avatar = ttk.Combobox(self.Header_frame,width=25,state='readonly')
-        filterlabel = ttk.Label(self.Header_frame,text='Filter')
-        self.filter = ttk.Entry(self.Header_frame)
-        self.filter_enable = ttk.Button(self.Header_frame,text='Enable',width=8)
-        self.filter_disable = ttk.Button(self.Header_frame,text='Disable',width=8)
-        self.Controller_settings_button = ttk.Button(self.Header_frame,style='setting.TButton',text='❌',width=3,command=lambda:self.kill(self.id))
-        self.default_parameters_filter = ttk.Treeview(self.Header_frame,height=8,style='L.Treeview')
+        avatar_label = ttk.Label(self.Header_frame,text='Avatar :',font=("", 10))
+        self.Avatar = ttk.Combobox(self.Header_frame,width=25,state='disable')
+        self.Delete_button = ttk.Button(self.Header_frame,text='Delete Controller',width=20,bootstyle='danger',command=lambda:self.kill(self.id))
+        #self.Settings_button = ttk.Button(self.Header_frame,text='')
+        
+        self.Add_parameter_entry = ttk.Entry(self.Header_frame)
+        self.Add_parameter = ttk.Button(self.Header_frame,text='Add New',width=16,padding=5)
+        self.Remove_parameter = ttk.Button(self.Header_frame,text='Forget',width=16,padding=5)
+        filterlabel = ttk.Label(self.Header_frame,text='Filter',font=("", 10))
+        self.filter_entry = ttk.Entry(self.Header_frame)
+        self.filter_enable = ttk.Button(self.Header_frame,text='Enable',width=9,padding=4,state='disable')
+        self.filter_disable = ttk.Button(self.Header_frame,text='Disable',width=9,padding=4,state='disable')
+        self.default_parameters_filter = ttk.Treeview(self.Header_frame,height=8,style='L.Treeview',selectmode='none')
         self.default_parameters_filter.column('#0',width=240)
         self.default_parameters_filter.heading('#0',text='Default avatar parameters',anchor='n')
         self.learned_parameters_filter = ttk.Treeview(self.Header_frame,height=8,style='L.Treeview')
@@ -222,7 +362,7 @@ class Tabi_layout(ttk.Frame):
         self.Stick_space.vscroll.configure(bootstyle='light-round')
 
         Spacer_frame.grid(row=1,column=0,sticky='new')
-        self.Header_button.pack(side='right',padx=[0,2])
+        self.Header_button.pack(side='right',padx=[0,12])
         Header_seperator.grid(row=1,column=0,sticky='new',pady=14)
         self.Add_event_button.grid(row=1,column=0,sticky='n')
         self.Header_frame.grid(row=0,column=0,sticky='nsew')
@@ -234,14 +374,18 @@ class Tabi_layout(ttk.Frame):
         self.selection3.grid(row=1,column=0,sticky='n',padx=[400,0],pady=[5,0])
         self.selection4.grid(row=1,column=0,sticky='n',padx=[475,0],pady=[5,0])
         self.Title.grid(row=1,column=0,sticky='n',padx=[0,420],pady=[5,0])
-        self.Avatar.grid(row=0,column=3,sticky='ne')
-        filterlabel.grid(row=1,column=2,pady=[0,10])
-        self.filter.grid(row=1,column=2,sticky='s')
-        self.filter_enable.grid(row=2,column=2,sticky='s',pady=[0,30])
-        self.filter_disable.grid(row=2,column=2,sticky='s')
+        self.Delete_button.grid(row=0,column=0,sticky='nw',padx=[5,0],pady=[2,2])
+        #self.Settings_button.grid(row=0,column=1,sticky='n',padx=[5,0],pady=[2,2])
+        avatar_label.grid(row=0,column=3,sticky='nw',columnspan=2,padx=[10,0],pady=[6,2])
+        self.Avatar.grid(row=0,column=3,sticky='n',columnspan=2,padx=[35,0],pady=[2,2])
+        self.Add_parameter.grid(row=2,column=2,sticky='n',padx=[4,4],pady=[0,0])
+        self.Remove_parameter.grid(row=2,column=2,sticky='s',padx=[4,4],pady=[0,0])
+        filterlabel.grid(row=0,column=2,sticky='n',pady=[6,0])
+        self.filter_entry.grid(row=1,column=2,sticky='n',padx=[4,4])
+        self.filter_enable.grid(row=1,column=2,pady=[8,4],padx=[0,70])
+        self.filter_disable.grid(row=1,column=2,pady=[8,4],padx=[70,0])
         self.default_parameters_filter.grid(row=1,column=0,sticky='nse',columnspan=2,rowspan=3,pady=[0,10])
         self.learned_parameters_filter.grid(row=1,column=3,sticky='nsw',columnspan=2,rowspan=3,pady=[0,10])
-        self.Controller_settings_button.grid(row=0,column=4,sticky='ne')
 
 class Eventi_layout(ttk.Labelframe):
     def __init__(self,parent,sticktype,template=None):
@@ -250,16 +394,17 @@ class Eventi_layout(ttk.Labelframe):
         self.columnconfigure(0,weight=1)
 
         self.widgets = {}
-       
+
         self.Header_frame = ttk.Frame(self)
         self.body = ttk.Frame(self)
         self.Response_list = ttk.Treeview(self.body,columns=['Address','Value','Delay'],selectmode='browse',height=8,style='L.Treeview')
         self.Trigger = ttk.Combobox(self.Header_frame,justify='center',style='Label.TCombobox',width=45,state='disabled')
+        self.Toggle = ttk.Checkbutton(self.Header_frame,text='Enabled',bootstyle='round-toggle',)
         self.sep1 = ttk.Separator(self.body,orient='horizontal')
         self.sep2 = ttk.Separator(self.body,orient='vertical')
-        self.Condition_label = ttk.Label(self.body,text='Condition',foreground=Secondary,font=('','10'))
-        self.Response_label = ttk.Label(self.body,text='Response',foreground=Secondary,font=('','10'))
-        self.Response_address = ttk.Combobox(self.body)
+        self.Condition_label = ttk.Label(self.body,text='Condition',style='alt2.TLabel')
+        self.Response_label = ttk.Label(self.body,text='Response',style='alt2.TLabel')
+        self.Response_address = ttk.Combobox(self.body,width=28)
         self.Address_label = ttk.Label(self.body,text='Address')
         self.Response_value = ttk.Entry(self.body,width=8,validate='key')
         self.Response_value_avatars = ttk.Combobox(self.body,width=8)
@@ -296,9 +441,10 @@ class Eventi_layout(ttk.Labelframe):
 
         self.Header_frame.grid(row=0,column=0,sticky='nsew')
         self.body.grid(row=1,column=0,sticky='nsew')
+        self.Toggle.grid(row=0,column=2)
         self.sep1.grid(row=0,column=0,sticky='new',columnspan=3)
         self.sep2.grid(row=0,column=0,sticky='nse',rowspan=4,pady=[0,5])
-        self.Response_list.grid(row=0,column=2,sticky='nsew',rowspan=4)
+        self.Response_list.grid(row=0,column=2,sticky='nsew',rowspan=4,pady=[1,0])
         self.Trigger.grid(row=0,column=0,columnspan=2,sticky='n')
         self.Condition_label.grid(row=0,column=0,sticky='n',pady=[5,0])
         self.Response_label.grid(row=0,column=1,sticky='n',pady=[5,0])

@@ -14,7 +14,7 @@ class aug(ttk.Frame):
         self.rowconfigure(0,weight=1)
         self.columnconfigure([0,1],weight=1)
 
-        self.Typelabel = ttk.Label(self,text='Event',foreground='#ff5f93',background='#171717',font=('','10'))
+        self.Typelabel = ttk.Label(self,text='Event',style='alt.TLabel')
         Delete = ttk.Button(self,text='❌',width=3,padding=[0,1,2,1])
         self.Expandb = ttk.Button(self,text='➖',width=3,padding=[0,1,2,1],command=self.Expand)
         
@@ -48,11 +48,20 @@ class Eventi(Eventi_layout):
         self.name_var = ttk.BooleanVar()
         self.avatar_var = ttk.BooleanVar()
         self.world_var = ttk.BooleanVar()
+        self.toggle_var = ttk.BooleanVar(value=True)
         self.label = aug(self,'Int')
+
+        def toggle_active():
+            match self.toggle_var.get():
+                case True:
+                    self.Toggle.configure(text='Enabled')
+                case False:
+                    self.Toggle.configure(text='Disabled')
 
         self.configure(labelwidget=self.label,labelanchor='ne',height=50,style='Tab.TLabelframe')
         self.vcmd = self.register(self.__Validate_osc_entry)
 
+        self.Toggle.configure(command=toggle_active,variable=self.toggle_var)
         self.Response_address.configure(values=controller.response_parameters,postcommand=lambda:self.Response_address.configure(values=controller.response_parameters))
         self.Response_value.configure(validatecommand=(self.vcmd,'%P'))
         self.Response_save.configure(command=self.Insert_data)
@@ -110,7 +119,7 @@ class Eventi(Eventi_layout):
             'avatar':self.widgets['avatar'].get() if self.widgets.get('avatar') and Trigger == 'Avatar changed' else None,
             'world':self.widgets['world'].get() if self.widgets.get('world') and Trigger == 'Invite' else None,
             'timestamp':None,# TODO: maybe implement
-            'message':None, # TODO:implement
+            'message':None, # TODO: implement
             'condition':self.widgets['condition_entry'].get() if self.widgets.get('condition_entry') else None,
             'conditionOP': self.widgets['condition_operator'].get() if self.widgets.get('condition_operator') else None,
             'address':self.Response_address.get(),

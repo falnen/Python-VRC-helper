@@ -8,21 +8,21 @@ import queue
 '''
 - T H E   P L A N -
       maybe.
-- app configuration
-----??? App colors?
-----??? Set playername manually vs get automatically from parser?
+STARTED, good enough- app configuration
+DONE ----??? App colors?
 ----??? Manually enter avatar names&ID's vs get automatically from the parser?
-----??? configure whats picked up by the log parser?
-----??? configure osc message collection?
-----??? toggle automatic avatar parameter colection?
-- controller configuration
-- select which avatar to use when creating a controller...
-- fix sidebar
-- configure log reader to only read logs from the current day, and skip to the current hour/some amount of time.
+IDK,----??? configure osc message collection?---???what is this mean....
+Done ----??? toggle automatic avatar parameter colection?
+DONE enough...-Next i think - controller configuration
+DONE - select which avatar to use when creating a controller...
+Done - fix sidebar
+-Easy- configure log reader to only read logs from the current day, and skip to the current hour/some amount of time.
 - Release 0.2?
 - finish parameter filter
 - enable parameter removal(delete unwanted parameters from the saved_avatars dict)
 - log filtering
+----??? Set playername manually vs get automatically from parser?
+----??? configure whats picked up by the log parser?
 - debug into log, and maybe file.
 - release 0.3?
 - Condition matching with messages from notifications.
@@ -37,7 +37,7 @@ State = Persistence.Load_data()
 def OSC_handler():
     '''
     Empties OSC message queue.\n
-    Calls handler function on controller with matching avatar, and the 'universal' controller.\n
+    Calls handler function on the controller with a matching avatar, and the 'universal' controller.\n
     Populates the saved_avatars dict with received avatar ID's and parameters.
     '''
     count = 0
@@ -47,13 +47,14 @@ def OSC_handler():
             if address == '/avatar/change':
                 if message not in Controller.Tabi.saved_avatars.values() and Controller.Tabi.avatar_name_hold is not None:
                     Controller.Tabi.saved_avatars[Controller.Tabi.avatar_name_hold] = [message,[]]
+                    assign_avatar_button(Controller.Tabi.avatar_name_hold)
                     Controller.Tabi.avatar_name_hold = None
             # Temporary filter: Avoids log spam from movement
             if address not in ('/avatar/parameters/Upright','/avatar/parameters/Grounded','/avatar/parameters/AngularY','/avatar/parameters/Halo-b_Angle','/avatar/parameters/VelocityZ','/avatar/parameters/VelocityX','/avatar/parameters/VelocityY','/avatar/parameters/VelocityMagnitude','/avatar/parameters/averageTrackerBattery','/avatar/parameters/leftControllerBattery','/avatar/parameters/rightControllerBattery'):
                 Layout.Message_display(address,message,text='Received:')
             for eController in frames.values():
                 if eController.Avatar.get() not in [VRC_events.avatar,'Universal']:continue
-                eController.custom_parameters(address)
+                if Layout.parameter_collect.get(): eController.custom_parameters(address)
                 eController.handler(address=address,OSCmessage=message)
             count +=1
         Layout.Root.after_idle(OSC_handler)
@@ -97,45 +98,51 @@ def VRC_handler(Event):
 def VRC_watcher():
     '''periodically(currently every 500ms) attempts to read the latest vrchat log for new events'''
     # Unimplemented: 'old log' skipping logic
+    if not Layout.VRC_Toggle.get():
+        Layout.Root.after_cancel(Layout.Root.after_info()[0])
+        return
     if Nolog := VRC_events.Read_log():
         Layout.Message_display('No logs found.','retrying in 30 seconds...','Error:\n')
         delay = 30000
     else: delay = 500
     Layout.Root.after(delay,VRC_watcher)
 
-def Create_controller(data = None):
+def Create_controller(avatar):
     '''
-    Good luck.\n
-    Function name should say it all.
+    It creates controllers.\n
     '''
-    used_avatars = [frame.Avatar.get() for frame in frames.values()]
-    unused_avatars = [avatar for avatar in Controller.Tabi.saved_avatars if avatar not in used_avatars]
-    if data:
-        for tab_name,Sticks in data.items():
-            if tab_name in {'App version', 'Server', 'Avatar data'}:
-                continue
-            item_id = Layout.Object_list.insert('', 'end', text=tab_name)
-            new_frame = Controller.Tabi(Layout.TabSpace,controller_id=item_id,controlled_avatar=data[tab_name]['Avatar'],name=tab_name,destroy=Destroy_controller)
-            frames[item_id] = new_frame
-            new_frame.grid(row=0, column=0, sticky='nsew',padx=(0,4),pady=(4,4))
-            new_frame.Load(Sticks)
-    else:
-        if not len(unused_avatars) >=1:
-            return
-        tab_name = f'{unused_avatars[0]} Controller'
+    tab_name = f'{avatar} Controller'
+    item_id = Layout.Object_list.insert('', 'end', text=tab_name)
+    new_frame = Controller.Tabi(Layout.TabSpace,controller_id=item_id,controlled_avatar=avatar,name=tab_name,destroy=Destroy_controller)
+    frames[item_id] = new_frame
+    new_frame.grid(row=0, column=0, sticky='nsew',padx=(0,4),pady=(4,4))
+    Layout.Pages.grid_remove()
+    Layout.menu_buttons[avatar].destroy()
+    Layout.menu_buttons.pop(avatar)
+    for frame in frames.values():
+        frame.lower()
+    try:
+        Layout.Object_list.selection_set(item_id)
+        new_frame.lift()
+    except: pass
+
+def Load_controllers(data):
+    '''
+    It loads controllers.
+    '''
+    for tab_name,Sticks in data.items():
         item_id = Layout.Object_list.insert('', 'end', text=tab_name)
-        new_frame = Controller.Tabi(Layout.TabSpace,controller_id=item_id,controlled_avatar=unused_avatars[0],name=tab_name,destroy=Destroy_controller)
+        new_frame = Controller.Tabi(Layout.TabSpace,controller_id=item_id,controlled_avatar=data[tab_name]['Avatar'],name=tab_name,destroy=Destroy_controller)
         frames[item_id] = new_frame
         new_frame.grid(row=0, column=0, sticky='nsew',padx=(0,4),pady=(4,4))
-        Layout.Configuration.grid_remove()
+        new_frame.Load(Sticks)
 
     for frame in frames.values():
         frame.lower()
     try:
         Layout.Object_list.selection_set(item_id)
         new_frame.lift()
-    except:
-        pass
+    except: pass
 
 def Destroy_controller(ControllerId):
     '''
@@ -144,14 +151,16 @@ def Destroy_controller(ControllerId):
     prev_controller = Layout.Object_list.prev(ControllerId)
     Layout.Object_list.delete(ControllerId)
     if frames[ControllerId].winfo_exists():
+        avatar = frames[ControllerId].Avatar.get()
         frames[ControllerId].destroy()
         frames.pop(ControllerId)
+        assign_avatar_button(avatar)
     if prev_controller in frames:
         Layout.Object_list.selection_set(prev_controller)
         frames[prev_controller].grid()
         frames[prev_controller].lift()
     else: Settings_view()
-            
+    
 def on_treeview_select(event):
     '''
     When selecting an item from the controller list, removes the current controller tab, and shows the selected controller tab.
@@ -178,6 +187,25 @@ def Settings_view():
             frame.lower()
             frame.grid_remove()
 
+def assign_avatar_button(avatar):
+    '''
+    Assigns avatars to the dropdown that pops up when clicking "Add New Controller"
+    '''
+    used_avatars = [frame.Avatar.get() for frame in frames.values()]
+    #unused_avatars = [avatar for avatar in Controller.Tabi.saved_avatars if avatar not in used_avatars]
+    if avatar not in used_avatars:
+        avatar_button = Layout.insert_avatar_button(avatar)
+        avatar_button.configure(command=lambda avatar=avatar:Create_controller(avatar))
+
+def load_settings(settings):
+    Layout.r_ipvar.set(settings['r_Ip'])
+    Layout.r_portvar.set(settings['r_Port'])
+    Layout.s_ipvar.set(settings['s_Ip'])
+    Layout.s_portvar.set(settings['s_Port'])
+    Layout.style.colors.set('primary', settings['Primary-color'])
+    Layout.style.colors.set('secondary', settings['Secondary-color'])
+    Layout.app_color_set('#000000',3)
+
 def defocus(event):
     '''
     Work around.\n
@@ -186,8 +214,9 @@ def defocus(event):
     widget = event.widget
     try:
         class_name = widget.winfo_class()
-        if class_name not in ('Text','Button','Treeview','TEntry','TCombobox','Radiobutton','Scrollbar','Spinbox','Listbox'):
+        if class_name not in ('Text','TButton','Treeview','TEntry','TCombobox','Radiobutton','Scrollbar','Spinbox','Listbox'):
             Layout.Root.focus_set()
+            
     except:
         pass      
 
@@ -196,32 +225,38 @@ def reset_oscServer():
     Stops the OSC server.\n
     Starts the OSC server with new address & port values.
     '''
-    if not Layout.ipvar.get():Layout.ipvar.set('127.0.0.1')
+    if not Layout.r_ipvar.get():Layout.r_ipvar.set('127.0.0.1')
+    if not Layout.s_ipvar.get():Layout.s_ipvar.set('127.0.0.1')
     Server.stop_server()
     try:
-        Layout.Root.after(1000,Server.Start_server,Layout.ipvar.get(),Layout.portvar.get())
+        Layout.Root.after(1000,Server.Start_server,Layout.r_ipvar.get(),Layout.r_portvar.get())
     except Exception as e:
-        Layout.ipvar.set('127.0.0.7')
-        Layout.portvar.set(9001)
+        print(e)
+        Layout.r_ipvar.set('127.0.0.7')
+        Layout.r_portvar.set(9001)
         Layout.Message_display(address='',message=f'{e}\nInvalid IP or Port\nSetting values to default\n',text='Error: ')
-        Layout.Root.after(1000,Server.Start_server,Layout.ipvar.get(),Layout.portvar.get())
+        Layout.Root.after(1000,Server.Start_server,Layout.r_ipvar.get(),Layout.r_portvar.get())
 
 Layout.Root.bind_all("<Button-1>",defocus)
 Layout.Settings_button.configure(command=Settings_view)
-Layout.Add_Tab.configure(command=Create_controller)
 Layout.Object_list.bind("<<TreeviewSelect>>", on_treeview_select)
 Layout.Server_set.configure(command=reset_oscServer)
+Layout.vrc_enable.configure(command=VRC_watcher)
+
+if State:# Loads previous app state from file, if it exists.
+    if State.get('Avatar data'): Controller.Tabi.saved_avatars = State.get('Avatar data')
+    load_settings(State.get('Settings'))
+    Layout.Root.after(0,Load_controllers(State['Controllers']))
+    for avatar in Controller.Tabi.saved_avatars.keys():
+            assign_avatar_button(avatar)
 
 Server = OSC_Listner()
-Server.Start_server(Layout.ipvar.get(),Layout.portvar.get())
+Server.Start_server(Layout.r_ipvar.get(),Layout.r_portvar.get())
 VRC_events = Log_parser(VRC_handler)
 
 Layout.Root.after(1000,OSC_handler)
 Layout.Root.after(1000,VRC_watcher)
 VRC_events.Find_user()
-if State:# Loads previous app state from file, if it exists.
-    if State.get('Avatar data'): Controller.Tabi.saved_avatars = State.get('Avatar data')
-    Layout.Root.after(0,Create_controller(State))
 
 Layout.Root.protocol("WM_DELETE_WINDOW", lambda: (Persistence.save_state(frames), Layout.Root.destroy()))
 

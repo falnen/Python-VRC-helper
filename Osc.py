@@ -30,7 +30,7 @@ class OSC_Listner:
     
     def Start_server(self,ip,port):
         if self.server: return
-        self.server = osc_server.BlockingOSCUDPServer(('127.0.0.1', 9001), self.dispatcher)
+        self.server = osc_server.BlockingOSCUDPServer((ip, port), self.dispatcher)
         self.server_thread = threading.Thread(group=None,target=self.server.serve_forever, daemon=True)
         self.server_thread.start()
         Log_display.insert('end',f'Listning on - {ip}:{port}\n')
