@@ -84,11 +84,9 @@ class Log_parser:
                         self.skip = 'Normal'
                         break
                     elif self.skip == 'Loading':
-                        if not condition == 'Avatar changed':
-                            continue
+                        if not condition == 'Avatar changed': continue
                         args = result.groupdict()
-                        if not args.get('User') == self.Local_user:
-                            break
+                        if not args.get('User') == self.Local_user: break
                         args['Type'] = 'Local avatar'
                         self.avatar = args.get('Avatar')
                         self.handler(args)

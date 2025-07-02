@@ -13,13 +13,31 @@ class OSC_client:
         self.client.send_message(address,response)
 
 class OSC_Listner:
+    active_server = None
     def __init__(self):
         self.dispatcher = dispatcher.Dispatcher()
         self.server = None
         self.server_thread = None
         self.last_message = (None,None)
+        self.handlers = {}
         self.message_queue = queue.Queue()
+
+    def Map_address(self,address):
+        handler = self.dispatcher.map(address,self.Msg_handler)
+        self.handlers[address] = handler
+    
+    def unMap_address(self,address):
+        handler = self.handlers.pop(address)
+        self.dispatcher.unmap(address,handler)
+
+    def Map_all(self):
         self.dispatcher.set_default_handler(self.Msg_handler)
+        Log_display.insert('end',f'Map all enabled:\nMapping all OCS addresses.\n')
+        Log_display.yview('end')
+
+    def unMap_all(self):
+        self.dispatcher.set_default_handler(Log_display.insert('end','Mapp all disabled:\nUnmapping unused OSC addresses.\n'))
+        Log_display.yview('end')
 
     def Msg_handler(self,address,*args):
         value = round(args[0],3) if isinstance(args[0],float) else args[0]

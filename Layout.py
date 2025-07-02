@@ -3,6 +3,7 @@ from tkinter import filedialog
 import ttkbootstrap as ttk
 from ttkbootstrap import scrolled as stk
 from ttkbootstrap.dialogs import colorchooser
+from ttkbootstrap.tooltip import ToolTip
 from ttkbootstrap.style import ThemeDefinition
 from ttkbootstrap.constants import *
 from Persistence import Directory, Update_dir
@@ -37,6 +38,9 @@ def style_widgets():
     style.layout("danger.TButton", [('Button.border', {'sticky': 'nswe', 'children': [('Button.padding', {'sticky': 'nswe', 'children': [('Button.label', {'sticky': 'nswe'})]})]})])
     style.configure('danger.TButton',foreground=style_widgets.danger,background='#222222',width=20)
     style.map('danger.TButton',background=[('active','#111111')])
+    style.layout("arrow.TButton", [('Button.border', {'sticky': 'nswe', 'children': [('Button.padding', {'sticky': 'nswe', 'children': [('Button.label', {'sticky': 'nswe'})]})]})])
+    style.configure('arrow.TButton',foreground=style_widgets.Secondary,background='#222222',bordercolor=style_widgets.Primary,font=('',10),width=20)
+    style.map('arrow.TButton',background=[('active','#111111')])
     style.configure('TEntry')
     style.map('TEntry',fieldbackground=[('disabled','#222222')])
     #Settings button layout
@@ -77,6 +81,7 @@ style_widgets()
 location_var = ttk.StringVar(value=Directory())
 parameter_collect = ttk.BooleanVar(value=True)
 VRC_Toggle = ttk.BooleanVar(value=True)
+test_var = ttk.BooleanVar(value=True)
 menu_buttons = {}
 
 def Get_folder():
@@ -105,16 +110,21 @@ def Message_display(address,message,text = None):
 def show_custom_menu():
     bx = Add_controller.winfo_rootx()
     by = Add_controller.winfo_rooty() + Add_controller.winfo_height()
-    menu_win.deiconify()
-    menu_win.focus()
     menu_win.geometry(f"+{bx}+{by}")
+    menu_win.deiconify()
+    menu_win.lift()
+    manual_name_entry.focus()
 
 def insert_avatar_button(avatar):
     if avatar not in menu_buttons.keys():
-        avatar_button = ttk.Button(pop_frame,text=avatar,style='pop.TButton')
-        avatar_button.pack(padx=2, pady=2,fill='both')
+        avatar_button = ttk.Button(mborderframe,text=avatar,style='pop.TButton')
+        avatar_button.pack(padx=2, pady=1,fill='both')
         menu_buttons[avatar] = avatar_button
         return avatar_button
+
+def hide_custom_menu(event):
+    if event.widget.winfo_class() in ('TEntry','TButton','TFrame'):return
+    menu_win.withdraw()
 
 def app_color_set(initcolor,var):
     '''
@@ -193,12 +203,23 @@ Add_controller = ttk.Button(Root,text='Add New Controler',padding=8,command=show
 menu_win = tk.Toplevel(Root,bg='#222222')
 menu_win.overrideredirect(True)
 menu_win.withdraw()
-menu_win.bind('<FocusOut>',lambda event:Root.after(100, menu_win.withdraw))
+menu_win.bind('<FocusOut>',hide_custom_menu)
+mborderframe = ttk.Frame(menu_win,style='pop.TFrame')
+mborderframe.pack()
+m_frame = ttk.Frame(mborderframe)
+m_frame.pack(fill='both',padx=2,pady=[2,1])
+manual_name_entry = ttk.Entry(m_frame)
+manual_name_label = ttk.Label(m_frame,text='Name : ')
+manual_id_entry = ttk.Entry(m_frame)
+manual_id_label = ttk.Label(m_frame,text='ID : ')
+manual_button = ttk.Button(m_frame,text='Add')
+ToolTip(manual_button,text='Avatar Name And ID Must Match EXACTLY As They Do In VRC Or The Controller Will Not Work.',delay=0,bootstyle='selectbg')
+manual_name_entry.grid(row=0,column=1,sticky='n',pady=[4,0],padx=[0,4])
+manual_name_label.grid(row=0,column=0,sticky='n',pady=[4,0])
+manual_id_entry.grid(row=1,column=1,sticky='n',pady=[4,0],padx=[0,4])
+manual_id_label.grid(row=1,column=0,sticky='n',pady=[4,0])
+manual_button.grid(row=2,column=0,columnspan=2,sticky='n',pady=[6,6])
 
-pop_frame = ttk.Frame(menu_win,style='pop.TFrame')
-pop_frame.pack()
-btn = ttk.Button(pop_frame, text='*Future Manual Entry*', style='pop.TButton', command=menu_win.withdraw)
-btn.pack(padx=2, pady=2)
 Add_controller.grid(row=0,column=0,sticky='sew',padx=[4,0],pady=[0,45])
 
 #------Settings Button
@@ -227,6 +248,16 @@ OSC_Settings.rowconfigure([0,1,2],weight=1)
 OSC_Settings.columnconfigure([0,1,2],weight=1)
 
 #--------------------OSC Configuration
+
+advanced_frame = ttk.Labelframe(Basic_settings,text='Advanced',padding=5)
+advanced_label = ttk.Label(advanced_frame, justify='center', text='Performance', style='alt2.TLabel')
+Mapall_toggle = ttk.Checkbutton(advanced_frame,variable=test_var,text='Map all OSC addresses.',bootstyle='round-toggle')
+ToolTip(Mapall_toggle, text='Disabling this settings will stop the app from automatically catching unmapped OSC messages.\nWhich will prevent avatar name, id, and parameter collection.\nMeaning all avatar controllers, and parameters will have to be input manually.',delay=0,bootstyle='selectbg')
+advanced_frame.grid(row=1,column=2,sticky='se')
+advanced_frame.rowconfigure((0,1,2),weight=1)
+advanced_frame.columnconfigure(1,weight=1)
+advanced_label.grid(row=1,column=0,sticky='n')
+Mapall_toggle.grid(row=2,column=0)
 
 #------Address entry
 Address_frame = ttk.Labelframe(OSC_Settings,text='OSC Address',labelanchor='n')
@@ -257,21 +288,21 @@ sPort_entry.grid(row=3,column=2,columnspan=2,sticky='nsew',padx=(2,5),pady=(0,5)
 Server_set = ttk.Button(Address_frame,text='Set')
 Server_set.grid(row=5,column=0,columnspan=3,sticky='s',pady=[0,5])
 #------VRC
-VRC_config_frame = ttk.Labelframe(VRC_Settings,text='Options',labelanchor='n',padding=8)
-VRC_config_frame.grid(row=0,column=1,sticky='n',pady=(0,0))
-VRC_config_frame.rowconfigure([0,1],weight=1)
-VRC_config_frame.columnconfigure([0,1],weight=1)
-
-vrc_enable = ttk.Checkbutton(VRC_config_frame,variable=VRC_Toggle,text='VRC Log Parser.\nDisabling this option will cause the VRC Events to not work',bootstyle='round-toggle')
-vrc_enable.grid(row=0,column=0)
+#VRC_config_frame = ttk.Labelframe(VRC_Settings,text='Options',labelanchor='n',padding=8)
+#VRC_config_frame.grid(row=0,column=1,sticky='n',pady=(0,0))
+#VRC_config_frame.rowconfigure([0,1],weight=1)
+#VRC_config_frame.columnconfigure([0,1],weight=1)
+#
+#vrc_enable = ttk.Checkbutton(VRC_config_frame,variable=VRC_Toggle,text='VRC Log Parser.\nDisabling this option will cause VRC Events to not work',bootstyle='round-toggle')
+#vrc_enable.grid(row=0,column=0)
 #------OSC
-OSC_config_frame = ttk.Labelframe(OSC_Settings,text='Options',labelanchor='n',padding=8)
-OSC_config_frame.grid(row=1,column=1,sticky='n',pady=(0,0))
-OSC_config_frame.rowconfigure([0,1],weight=1)
-OSC_config_frame.columnconfigure([0,1],weight=1)
-
-acap = ttk.Checkbutton(OSC_config_frame,variable=parameter_collect,text='Automatic Avatar Parameter Collection',bootstyle='round-toggle')
-acap.grid(row=0,column=0)
+#OSC_config_frame = ttk.Labelframe(OSC_Settings,text='Options',labelanchor='n',padding=8)
+#OSC_config_frame.grid(row=1,column=1,sticky='n',pady=(0,0))
+#OSC_config_frame.rowconfigure([0,1],weight=1)
+#OSC_config_frame.columnconfigure([0,1],weight=1)
+#
+#acap = ttk.Checkbutton(OSC_config_frame,variable=parameter_collect,text='Automatic Avatar Parameter Collection',bootstyle='round-toggle')
+#acap.grid(row=0,column=0)
 
 #------OSC Event config
 
@@ -331,7 +362,8 @@ class Tabi_layout(ttk.Frame):
         self.Header_frame = ttk.Frame(self,padding=0)
         avatar_label = ttk.Label(self.Header_frame,text='Avatar :',font=("", 10))
         self.Avatar = ttk.Combobox(self.Header_frame,width=25,state='disable')
-        self.Delete_button = ttk.Button(self.Header_frame,text='Delete Controller',width=20,bootstyle='danger',command=lambda:self.kill(self.id))
+        self.Delete_button = ttk.Button(self.Header_frame,text='Delete Controller',width=20,bootstyle='danger')
+        ToolTip(self.Delete_button, text='Hold Shift To Delete Saved Avatar Along With Controller.\nProbably A Temporary Solution.',delay=0,bootstyle='selectbg')
         #self.Settings_button = ttk.Button(self.Header_frame,text='')
         
         self.Add_parameter_entry = ttk.Entry(self.Header_frame)
@@ -352,8 +384,8 @@ class Tabi_layout(ttk.Frame):
         self.Title = ttk.Combobox(self,width=30,style='event.TCombobox')
         self.selection1 = ttk.Radiobutton(self,padding=[2,0,2,0],text='OSC',value='OSC',bootstyle='outline-toolbutton')
         self.selection2 = ttk.Radiobutton(self,padding=[2,0,2,0],text='VRC',value='VRC',bootstyle='outline-toolbutton')
-        self.selection3 = ttk.Radiobutton(self,padding=[2,0,2,0],text='SYS',value='SYS',bootstyle='outline-toolbutton',state='disabled')
-        self.selection4 = ttk.Radiobutton(self,padding=[2,0,2,0],text='NET',value='NET',bootstyle='outline-toolbutton',state='disabled')
+        self.selection3 = ttk.Radiobutton(self,padding=[2,0,2,0],text='-',value='SYS',bootstyle='outline-toolbutton',state='disabled')
+        self.selection4 = ttk.Radiobutton(self,padding=[2,0,2,0],text='-',value='NET',bootstyle='outline-toolbutton',state='disabled')
 
         self.Stick_space.container.configure(style='Tab.TFrame')
         self.Stick_space.grid(row=1,column=0,sticky='nsew')
@@ -413,10 +445,10 @@ class Eventi_layout(ttk.Labelframe):
         self.Delay_label = ttk.Label(self.body,text='Delay')
         self.Response_save = ttk.Button(self.body,text='Save')
         self.List_remove = ttk.Button(self.body,text='Remove',width=7,state='disabled')
-        self.List_orderup = ttk.Button(self.body,text='▲',width=2,state='disabled',padding=[2,1,3,1])
-        self.List_orderdown = ttk.Button(self.body,text='▼',width=2,state='disabled',padding=[2,1,3,1])
-        self.List_ordertop = ttk.Button(self.body,text='⩞',width=2,state='disabled',padding=[2,1,3,1])
-        self.List_orderbottom = ttk.Button(self.body,text='⩣',width=2,state='disabled',padding=[2,1,3,1])
+        self.List_orderup = ttk.Button(self.body,text='▲',width=2,state='disabled',style='arrow.TButton',padding=[1,0,2,0])
+        self.List_orderdown = ttk.Button(self.body,text='▼',width=2,state='disabled',style='arrow.TButton',padding=[1,0,2,0])
+        self.List_ordertop = ttk.Button(self.body,text='△',width=2,state='disabled',style='arrow.TButton',padding=[3,2,4,2])
+        self.List_orderbottom = ttk.Button(self.body,text='▽',width=2,state='disabled',style='arrow.TButton',padding=[3,2,4,2])
 
         for name, widgetdata in template[sticktype].items():
             widget = widgetdata['widget'](self.body,**widgetdata.get('params',{}))
@@ -456,7 +488,7 @@ class Eventi_layout(ttk.Labelframe):
         self.Delay_label.grid(row=2,column=1,sticky='n',padx=[50,0],pady=[0,5])
         self.Response_save.grid(row=3,column=0,columnspan=2,sticky='s',pady=[0,5])
         self.List_remove.grid(row=3,column=2,sticky='s',pady=[0,5],padx=[0,0])
-        self.List_orderup.grid(row=3,column=2,sticky='s',pady=[0,8],padx=[0,90])
-        self.List_orderdown.grid(row=3,column=2,sticky='s',pady=[0,8],padx=[90,0])
-        self.List_ordertop.grid(row=3,column=2,sticky='s',pady=[0,8],padx=[0,135])
-        self.List_orderbottom.grid(row=3,column=2,sticky='s',pady=[0,8],padx=[135,0])
+        self.List_orderup.grid(row=3,column=2,sticky='s',pady=[0,9],padx=[0,145])
+        self.List_orderdown.grid(row=3,column=2,sticky='s',pady=[0,9],padx=[145,0])
+        self.List_ordertop.grid(row=3,column=2,sticky='s',pady=[0,7],padx=[0,95])
+        self.List_orderbottom.grid(row=3,column=2,sticky='s',pady=[0,7],padx=[95,0])

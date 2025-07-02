@@ -3,6 +3,7 @@ import json
 import appdirs 
 from shutil import move
 import Layout
+
 directory_dir = Path(appdirs.user_data_dir('osc app', 'falnen'))
 directory_dir.mkdir(parents=True, exist_ok=True)
 directory_file = directory_dir.joinpath("Directory.json")
@@ -52,26 +53,27 @@ def save_state(frames_dict):
         'Secondary-color':Layout.style.colors.get('secondary')
         }
     try:
-        State['Avatar data'] = list(frames_dict.values())[0].saved_avatars
+        
+        State['Avatar data'] = list(frames_dict.values())[0][1].saved_avatars
         State['Controllers'] = {}
         
-        for id in Layout.Object_list.get_children():
-            controller = frames_dict[id]
-            name = controller.name
-            State['Controllers'][name] = {'Avatar':controller.Avatar.get()}
+        for avatar, controller in frames_dict.items():
+            name = controller[1].name
+            #State['Avatar data'][avatar] = controller[1].saved_avatars
+            State['Controllers'][name] = {'Avatar':avatar}
             saved_controllers.add(name)
-            for StickId, Stick in controller.Stick_list.items():
-                State['Controllers'][name][StickId] = {'Type':Stick.Id[1],'Trigger':Stick.Trigger.get()}
+            for Title, Stick in controller[1].Stick_list.items():
+                State['Controllers'][name][Title] = {'Type':Stick.Id[1],'Trigger':Stick.Trigger.get()}
                 responseIds = Stick.Response_list.get_children()
                 for response in responseIds:
                     data = Stick.stick_data[response]
-                    State['Controllers'][name][StickId][response] = data
+                    State['Controllers'][name][Title][response] = data
     except Exception as e:
-        print(e)
+        print(e,'\nif "Index out of range" its cause im trying to grab saved avatars from an empty frames dict')
         pass
     for key in list(State.get('Controllers')):
         if key not in saved_controllers:# {'App version', 'Settings', 'Controllers', 'Avatar data'}:
-            del State[key]
+            del State['Controllers'][key]
 
     with open(app_state_file,'w') as file:
         json.dump(State,file,indent=4)
