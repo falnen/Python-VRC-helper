@@ -1,8 +1,8 @@
 import ttkbootstrap as ttk
 import Events
-from Layout import Tabi_layout, Message_display,s_ipvar,s_portvar
+from Layout import Tabi_layout, Message_display, s_ipvar, s_portvar
 from Constants import READ_ONLY_PARAMETERS, CONTROLS_LIST,GAME_EVENTS
-from Osc import OSC_client
+from Osc import OSC_client,OSC_Listner
 
 class Tabi(Tabi_layout):
     saved_avatars = {'Universal':[None,[]]}
@@ -27,17 +27,20 @@ class Tabi(Tabi_layout):
         self.Stick_list = {}
 
         def Add_stick():
-            match self.stick_type.get():
+            stick_type = self.stick_type.get()
+            title = self.Title.get()
+            match stick_type:
                 case 'OSC':triggers = self.control_parameters
                 case 'VRC':triggers = GAME_EVENTS
                 case 'SYS':triggers = self.System_events
                 case 'NET':triggers = self.Network_events
 
-            Id = (self.stick_count,self.stick_type.get())
-            Stick = Events.Eventi(self.Stick_space,Id=Id,controller=self,Title=self.Title.get(),triggers=triggers)
-            self.Stick_list[Id[0]] = Stick
+            #Id = (self.stick_count,stick_type)
+            Stick = Events.Eventi(self.Stick_space,Id=(self.stick_count,stick_type),controller=self,Title=title,triggers=triggers)
+            if stick_type == 'OSC': OSC_Listner.active_server.Map_address(title)
+            self.Stick_list[title] = Stick
+            Stick.grid(row=self.stick_count,column=0,sticky='nsew',padx=2,pady=4)
             self.stick_count += 1
-            Stick.grid(row=Id[0],column=0,sticky='nsew',padx=2,pady=4)
 
         def hide():
             if not self.Header_frame.grid_info():
@@ -46,6 +49,9 @@ class Tabi(Tabi_layout):
             else:
                 self.Header_frame.grid_remove()
                 self.Header_button.configure(text='Config')
+
+        def kill(a=None):
+            self.kill(self.controlled_avatar.get(),a)
 
         def List_set():
             match self.stick_type.get():
@@ -71,6 +77,10 @@ class Tabi(Tabi_layout):
             for parameter in self.saved_avatars[self.Avatar.get()][1]:
                 self.learned_parameters_filter.insert('','end',iid=parameter,text=parameter)
 
+        def clear_select(_):
+            if selection1 := self.default_parameters_filter.selection(): self.default_parameters_filter.selection_remove(selection1)
+            if selection2 := self.learned_parameters_filter.selection(): self.learned_parameters_filter.selection_remove(selection2)
+
         def add_new_parameter():
             parameter = self.filter_entry.get()
             if parameter not in Tabi.saved_avatars[self.controlled_avatar.get()][1]:
@@ -91,7 +101,8 @@ class Tabi(Tabi_layout):
         
         self.Header_button.configure(command=hide)
         self.Avatar.configure(textvariable=self.controlled_avatar,values=list(self.saved_avatars))
-        self.Delete_button.configure(command=lambda:self.kill(self.id))
+        self.Delete_button.configure(command=kill)
+        self.Delete_button.bind('<Shift-Button-1>',lambda a=None:kill(True))
         self.Title.configure(postcommand=List_set)
         self.Add_event_button.configure(command=Add_stick)
         self.selection1.configure(variable=self.stick_type,command=List_set)
@@ -99,6 +110,8 @@ class Tabi(Tabi_layout):
         self.selection3.configure(variable=self.stick_type,command=List_set)
         self.selection4.configure(variable=self.stick_type,command=List_set)
         self.Avatar.configure(postcommand=lambda:self.Avatar.configure(values=list(self.saved_avatars)))
+        self.default_parameters_filter.bind('<ButtonPress-3>',clear_select)
+        self.learned_parameters_filter.bind('<ButtonPress-3>',clear_select)
         self.Add_parameter.configure(command=add_new_parameter)
         self.Remove_parameter.configure(command=forget_parameter)
         self.Avatar.bind('<<ComboboxSelected>>',populate_parameter_filter)
@@ -161,22 +174,24 @@ class Tabi(Tabi_layout):
             return value
 
     def handler(self,address,OSCmessage=None,VRCevent=None):
-        for Stick in self.Stick_list.values():
-            user_address = Stick.Trigger.get()
-            if address == user_address and Stick.toggle_var.get() == True:
-                self.Lookup(Stick,OSCmessage=OSCmessage,VRCevent=VRCevent)
+        if Stick := self.Stick_list.get(address):
+            if not Stick.toggle_var.get(): return
+            self.Lookup(Stick,OSCmessage=OSCmessage,VRCevent=VRCevent)
 
     def Load(self,Sticks):
         for StickId,data in Sticks.items():
             if StickId == 'Avatar':continue
             StickType = data['Type']
-            if StickType == 'NET': triggers = self.Network_events
-            elif StickType == 'VRC': triggers = GAME_EVENTS
-            elif StickType == 'SYS': triggers = self.System_events
-            elif StickType == 'OSC': triggers = self.control_parameters
+            match StickType:
+                case 'OSC':
+                    triggers = self.control_parameters
+                    OSC_Listner.active_server.Map_address(data['Trigger'])
+                case 'VRC':triggers = GAME_EVENTS
+                case 'SYS':triggers = self.System_events
+                case 'NET':triggers = self.Network_events
 
             Stick = Events.Eventi(self.Stick_space,Id=(StickId,StickType),controller=self,Title=data['Trigger'],triggers=triggers)
-            self.Stick_list[StickId] = Stick
+            self.Stick_list[data['Trigger']] = Stick
+            Stick.grid(row=self.stick_count,column=0,sticky='nsew',padx=2,pady=4)
             self.stick_count += 1
-            Stick.grid(row=StickId,column=0,sticky='nsew',padx=2,pady=4)
             Stick.Load(data)
