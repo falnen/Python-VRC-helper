@@ -16,72 +16,81 @@ Root.minsize(900, 500)
 Root.columnconfigure(0, weight=0)
 Root.columnconfigure(1, weight=1)
 Root.rowconfigure(0, weight=1)
+Root.rowconfigure([1,2], weight=0)
 style = ttk.Style("darkly")
 style.colors.set('primary', '#632646')
 style.colors.set('secondary', '#FF5F93')
 style.colors.set('info', '#333333')
-#Primary = style.colors.get('primary')
-Secondary = style.colors.get('secondary')
-style.colors.set('light', style.colors.update_hsv(Secondary,sd=-0.3,vd=-0.3))
+#style.colors.set('selectbg','#632646')
 #light = style.colors.get('light')
 #dark = style.colors.get('dark')
+style.layout('TSeparator',[('Separator.separator', {'sticky': 'nswe'})])
+style.layout("danger.TButton", [('Button.border', {'sticky': 'nswe', 'children': [('Button.padding', {'sticky': 'nswe', 'children': [('Button.label', {'sticky': 'nswe'})]})]})])
+style.layout("arrow.TButton", [('Button.border', {'sticky': 'nswe', 'children': [('Button.padding', {'sticky': 'nswe', 'children': [('Button.label', {'sticky': 'nswe'})]})]})])
+style.layout("setting.TButton", [('Button.label', {'sticky': 'nswe'})])
+style.layout("c.TButton", [('Button.label', {'sticky': 'nswe'})])
+style.layout("pop.TButton", [('Button.border', {'sticky': 'nswe', 'border': '1', 'children': [('Button.focus', {'sticky': 'nswe', 'children': [('Button.padding', {'sticky': 'nswe', 'children': [('Button.label', {'sticky': 'nswe'})]})]})]})])
+style.layout('Label.TCombobox',[("Combobox.downarrow",{"side": tk.RIGHT, "sticky": tk.S},),("Combobox.padding",{"expand": "1","sticky": tk.NSEW,"children": [("Combobox.textarea",{"sticky": tk.NSEW},)],},),])
+style.layout('TButton',[('Button.border', {'sticky': 'nswe', 'border': '1', 'children': [('Button.padding', {'sticky': 'nswe', 'children': [('Button.label', {'sticky': 'nswe'})]})]})])
 #----------------------------Styling
+
 def style_widgets():
-    style_widgets.Primary = style.colors.get('primary')
-    style_widgets.Secondary = style.colors.get('secondary')
-    style_widgets.danger = style.colors.get('danger')
-    style_widgets.light = style.colors.get('light')
-    style_widgets.dark = style.colors.get('dark')
-    style.layout("TButton", [('Button.border', {'sticky': 'nswe', 'children': [('Button.padding', {'sticky': 'nswe', 'children': [('Button.label', {'sticky': 'nswe'})]})]})])
-    style.configure('TButton',foreground=style_widgets.Secondary,background='#222222',bordercolor = style_widgets.Primary,width=20)
+    Primary = style.colors.get('primary')
+    Secondary = style.colors.get('secondary')
+    style.colors.set('light', style.colors.update_hsv(Secondary,sd=-0.3,vd=-0.3))
+    style.configure('TButton',foreground=Secondary,background='#222222',bordercolor=Primary,darkcolor=Primary,lightcolor=Primary,width=20)
     style.map('TButton',background=[('active','#111111')])
-    style.layout("danger.TButton", [('Button.border', {'sticky': 'nswe', 'children': [('Button.padding', {'sticky': 'nswe', 'children': [('Button.label', {'sticky': 'nswe'})]})]})])
-    style.configure('danger.TButton',foreground=style_widgets.danger,background='#222222',width=20)
+    
+    style.configure('danger.TButton',foreground=style.colors.get('danger'),background='#222222',width=20)
     style.map('danger.TButton',background=[('active','#111111')])
-    style.layout("arrow.TButton", [('Button.border', {'sticky': 'nswe', 'children': [('Button.padding', {'sticky': 'nswe', 'children': [('Button.label', {'sticky': 'nswe'})]})]})])
-    style.configure('arrow.TButton',foreground=style_widgets.Secondary,background='#222222',bordercolor=style_widgets.Primary,font=('',10),width=20)
+    
+    style.configure('arrow.TButton',foreground=Secondary,background='#222222',font=('',10),width=20)
     style.map('arrow.TButton',background=[('active','#111111')])
     style.configure('TEntry')
     style.map('TEntry',fieldbackground=[('disabled','#222222')])
     #Settings button layout
-    style.layout("setting.TButton", [('Button.label', {'sticky': 'nswe'})])
+    
     style.configure("setting.TButton",background='#222222',relief="flat",font=("", 16))
-    style.map("setting.TButton",background=[("active", "#222222")],foreground=[('active',style_widgets.Primary)])
+    style.map("setting.TButton",background=[("active", "#222222")],foreground=[('active',Primary)])
     #other button
-    style.layout("c.TButton", [('Button.label', {'sticky': 'nswe'})])
+
     style.configure("c.TButton",background='#222222',relief="flat",font=("", 10,))
-    style.map("c.TButton",background=[("active", "#222222")],foreground=[('active',style_widgets.Primary)])
+    style.map("c.TButton",background=[("active", "#222222")],foreground=[('active',Primary)])
     #otherother button
-    style.layout("pop.TButton", [('Button.border', {'sticky': 'nswe', 'border': '1', 'children': [('Button.focus', {'sticky': 'nswe', 'children': [('Button.padding', {'sticky': 'nswe', 'children': [('Button.label', {'sticky': 'nswe'})]})]})]})])
+    
     style.configure("pop.TButton",background='#171717',relief="flat",font=("", 10,))
-    style.map("pop.TButton",foreground=[('active',style_widgets.Secondary), ('!active',style_widgets.Secondary)],background=[('active','#070707'),('!active','#171717')])
+    style.map("pop.TButton",foreground=[('active',Secondary), ('!active',Secondary)],background=[('active','#070707'),('!active','#171717')])
     #label combobox
-    style.layout('Label.TCombobox',[("Combobox.downarrow",{"side": tk.RIGHT, "sticky": tk.S},),("Combobox.padding",{"expand": "1","sticky": tk.NSEW,"children": [("Combobox.textarea",{"sticky": tk.NSEW},)],},),])
+    
+    style.configure('TCombobox',bordercolor=Primary,arrowcolor=Secondary,focusfill=Primary)
+    style.map('TCombobox',fieldbackground=[('disabled','#222222'),('readonly','#222222')],bordercolor=[('focus',Primary)],arrowcolor=[('focus',Primary)],background=[('readonly','#222222')])
     style.configure('Label.TCombobox',background='#222222')
     style.configure('event.TCombobox',padding=[0,0,0,0])
-    style.map('TCombobox',fieldbackground=[('disabled','#222222')])
-    style.configure('TLabelframe',bordercolor=style_widgets.Primary,lightcolor=style_widgets.Primary,darkcolor=style_widgets.Primary)
 
-    style.configure('alt.TLabel',foreground=style_widgets.Secondary,background='#171717',font=('','10'))
-    style.configure('alt2.TLabel',foreground=style_widgets.Secondary,background='#222222',font=('','10'))
+    style.configure('TLabelframe',bordercolor=Primary,lightcolor=Primary,darkcolor=Primary)
+
+    style.configure('alt.TLabel',foreground=Secondary,background='#171717',font=('','10'))
+    style.configure('alt2.TLabel',foreground=Secondary,background='#222222',font=('','10'))
 
     style.configure("Treeview",rowheight=50,relief='solid')
-    style.map('Treeview',foreground=[('selected',style_widgets.Secondary), ('!selected',style_widgets.Secondary)],background=[('selected','#171717'),('!selected','#222222')],borderwidth=[('selected',1),('!selected',1),('hover',1)],bordercolor=[('selected',style_widgets.Primary),('!selected',style_widgets.Primary)])
+    style.map('Treeview',foreground=[('selected',Secondary), ('!selected',Secondary)],background=[('selected','#171717'),('!selected','#222222')],borderwidth=[('selected',1),('!selected',1),('hover',1)],bordercolor=[('selected',Primary),('!selected',Primary)])
     style.configure('L.Treeview',rowheight=20)
     style.configure('VL.Treeview',rowheight=25)
     style.configure('Tab.TFrame',background='#171717')
-    style.configure('pop.TFrame',background=style_widgets.Primary)
-    style.configure('Tab.TLabelframe',background='#171717',bordercolor=style_widgets.Primary,lightcolor=style_widgets.Primary,darkcolor=style_widgets.Primary,labeloutside=True)
+    style.configure('pop.TFrame',background=Primary)
+    style.configure('Tab.TLabelframe',background='#171717',bordercolor=Primary,lightcolor=Primary,darkcolor=Primary,labeloutside=True)
     style.configure('Tab.TLabelframe.Label',background='#171717')
     style.configure('Tab.TNotebook',tabposition='wn',tabmargins=[0,10,0,10])
-    style.configure('TSeparator',background=style_widgets.Primary)
-    style.configure('TCheckbutton',indicatorcolor=style_widgets.Primary)
+    style.configure('TCheckbutton',indicatorcolor=Primary)
+    #print(style.configure('round.TCheckbutton'))
 style_widgets()
 #----------------------------Functions
 location_var = ttk.StringVar(value=Directory())
-parameter_collect = ttk.BooleanVar(value=True)
+parameter_collect = ttk.BooleanVar(value=False)
 VRC_Toggle = ttk.BooleanVar(value=True)
-test_var = ttk.BooleanVar(value=True)
+test_var = ttk.BooleanVar(value=False)
+logvar_1 = ttk.BooleanVar(value=False)
+logvar_2 = ttk.BooleanVar(value=False)
 menu_buttons = {}
 
 def Get_folder():
@@ -108,23 +117,23 @@ def Message_display(address,message,text = None):
     Log_display.yview('end')
 
 def show_custom_menu():
-    bx = Add_controller.winfo_rootx()
-    by = Add_controller.winfo_rooty() + Add_controller.winfo_height()
-    menu_win.geometry(f"+{bx}+{by}")
-    menu_win.deiconify()
-    menu_win.lift()
+    mborderframe.grid(row=1,column=0,sticky='nesw', pady=(0,4),padx=(4,0))
+    mborderframe.lift()
     manual_name_entry.focus()
+    mborderframe.bind_all('<FocusIn>',hide_custom_menu, add='+')
 
 def insert_avatar_button(avatar):
-    if avatar not in menu_buttons.keys():
-        avatar_button = ttk.Button(mborderframe,text=avatar,style='pop.TButton')
-        avatar_button.pack(padx=2, pady=1,fill='both')
-        menu_buttons[avatar] = avatar_button
-        return avatar_button
+    if avatar in menu_buttons.keys(): return
+    avatar_button = ttk.Button(mborderframe,text=avatar,style='pop.TButton')
+    avatar_button.pack(padx=2, pady=1,fill='both')
+    menu_buttons[avatar] = avatar_button
+    return avatar_button
 
 def hide_custom_menu(event):
-    if event.widget.winfo_class() in ('TEntry','TButton','TFrame'):return
-    menu_win.withdraw()
+    new_focus = event.widget.focus_get()
+    if new_focus not in m_frame.winfo_children() and new_focus not in mborderframe.winfo_children():
+        mborderframe.grid_forget()
+        mborderframe.unbind_all('<FocusIn>')
 
 def app_color_set(initcolor,var):
     '''
@@ -138,29 +147,18 @@ def app_color_set(initcolor,var):
         retcolor = Color_pop.result
     else:retcolor ='#ffffff'
     if not retcolor:return
-    #if var == 1:
-    #    style.colors.set('primary', retcolor.hex)
-    #elif var ==2:
-    #    style.colors.set('secondary', retcolor.hex)
-    #    style.colors.set('light', style.colors.update_hsv(retcolor.hex,sd=-0.3,vd=-0.3))
-    #Root.after(50,style_widgets())
-    try:
-        if var == 1:
-            style.colors.set('primary', retcolor.hex)
-        elif var ==2:
-            style.colors.set('secondary', retcolor.hex)
-            style.colors.set('light', style.colors.update_hsv(retcolor.hex,sd=-0.3,vd=-0.3))
-        elif var == 3:
-            style.colors.set('light', style.colors.update_hsv(style.colors.get('secondary'),sd=-0.3,vd=-0.3))
-        colors = {label: style.colors.get(label) for label in style.colors.label_iter()}
-        themename = "temp_" + str(uuid4()).replace("-", "")[:10]
-        definition = ThemeDefinition(themename, colors, style.theme.type)
-        style.register_theme(definition)
-        style.theme_use(themename)
-        Root.after(50,style_widgets())
-    except Exception as e:
-        pass
+    if var == 1:
+        style.colors.set('primary', retcolor.hex)
+    elif var == 2:
+        style.colors.set('secondary', retcolor.hex)
+    style_widgets()
 
+    #style_widgets()
+    #colors = {label: style.colors.get(label) for label in style.colors.label_iter()}
+    #themename = "temp_" + str(uuid4()).replace("-", "")[:10]
+    #definition = ThemeDefinition(themename, colors, 'dark')
+    #style.register_theme(definition)
+    #style.theme_use(themename)
 def validate_ip(P):
     if P == '' or P.replace('.', '').isdigit():
         if '..' not in P and not P.startswith('.'): 
@@ -192,39 +190,38 @@ s_portvar = ttk.IntVar(value=9000)
 TabSpace = ttk.Frame(Root)
 TabSpace.columnconfigure(0, weight=1)
 TabSpace.rowconfigure(0, weight=1)
-TabSpace.grid(row=0,column=1,sticky="nsew",)
+TabSpace.grid(row=0,column=1,rowspan=3,sticky="nsew",)
 
 #----------------------------Tab List
 Object_list = ttk.Treeview(Root,show='tree',height=6,selectmode='browse',style='Treeview')
-Object_list.grid(column=0, row=0, sticky='nsw', pady=(4,85),padx=(4,0))
+Object_list.grid(column=0, row=0, sticky='nsw', pady=(4,4),padx=(4,0))
 
 #------New tab button
 Add_controller = ttk.Button(Root,text='Add New Controler',padding=8,command=show_custom_menu)
-menu_win = tk.Toplevel(Root,bg='#222222')
-menu_win.overrideredirect(True)
-menu_win.withdraw()
-menu_win.bind('<FocusOut>',hide_custom_menu)
-mborderframe = ttk.Frame(menu_win,style='pop.TFrame')
-mborderframe.pack()
+#menu_win = tk.Toplevel(Root,bg='#222222')
+#menu_win.overrideredirect(True)
+#menu_win.withdraw()
+#menu_win.bind('<FocusOut>',hide_custom_menu)
+mborderframe = ttk.Frame(Root,padding=2,style='pop.TFrame')
 m_frame = ttk.Frame(mborderframe)
-m_frame.pack(fill='both',padx=2,pady=[2,1])
+m_frame.pack(fill='both')
 manual_name_entry = ttk.Entry(m_frame)
 manual_name_label = ttk.Label(m_frame,text='Name : ')
 manual_id_entry = ttk.Entry(m_frame)
 manual_id_label = ttk.Label(m_frame,text='ID : ')
-manual_button = ttk.Button(m_frame,text='Add')
-ToolTip(manual_button,text='Avatar Name And ID Must Match EXACTLY As They Do In VRC Or The Controller Will Not Work.',delay=0,bootstyle='selectbg')
+manual_button = ttk.Button(m_frame,text='Add Avatar')
+ToolTip(manual_button,text='Avatar name and ID must match EXACTLY as they do in VRC or the controller will not work.',delay=0,bootstyle='selectbg')
 manual_name_entry.grid(row=0,column=1,sticky='n',pady=[4,0],padx=[0,4])
 manual_name_label.grid(row=0,column=0,sticky='n',pady=[4,0])
 manual_id_entry.grid(row=1,column=1,sticky='n',pady=[4,0],padx=[0,4])
 manual_id_label.grid(row=1,column=0,sticky='n',pady=[4,0])
 manual_button.grid(row=2,column=0,columnspan=2,sticky='n',pady=[6,6])
 
-Add_controller.grid(row=0,column=0,sticky='sew',padx=[4,0],pady=[0,45])
+Add_controller.grid(row=2,column=0,sticky='sew',padx=[4,0],pady=[0,45])
 
 #------Settings Button
 Settings_button = ttk.Button(Root,text='Settings',padding=8)
-Settings_button.grid(row=0,column=0,sticky='sew',padx=[4,0],pady=[0,4])
+Settings_button.grid(row=2,column=0,sticky='sew',padx=[4,0],pady=[0,4])
 
 #----------------------------Settings
 
@@ -252,7 +249,7 @@ OSC_Settings.columnconfigure([0,1,2],weight=1)
 advanced_frame = ttk.Labelframe(Basic_settings,text='Advanced',padding=5)
 advanced_label = ttk.Label(advanced_frame, justify='center', text='Performance', style='alt2.TLabel')
 Mapall_toggle = ttk.Checkbutton(advanced_frame,variable=test_var,text='Map all OSC addresses.',bootstyle='round-toggle')
-ToolTip(Mapall_toggle, text='Disabling this settings will stop the app from automatically catching unmapped OSC messages.\nWhich will prevent avatar name, id, and parameter collection.\nMeaning all avatar controllers, and parameters will have to be input manually.',delay=0,bootstyle='selectbg')
+#ToolTip(Mapall_toggle, text='Disabling this settings will stop the app from automatically catching unmapped OSC messages.\nWhich will prevent avatar name, id, and parameter collection.\nMeaning all avatar controllers, and parameters will have to be input manually.',delay=0,bootstyle='selectbg')
 advanced_frame.grid(row=1,column=2,sticky='se')
 advanced_frame.rowconfigure((0,1,2),weight=1)
 advanced_frame.columnconfigure(1,weight=1)
@@ -272,8 +269,6 @@ receive_label = ttk.Label(Address_frame,text='Receive',style='alt2.TLabel')
 receive_label.grid(row=0,column=0,columnspan=3)
 send_label = ttk.Label(Address_frame,text='Send',style='alt2.TLabel')
 send_label.grid(row=2,column=0,columnspan=3)
-temp_label = ttk.Label(Address_frame,text='Changing the Send address or port\ncurrently requires an app restart')
-temp_label.grid(row=4,column=0,columnspan=3)
 
 rIp_entry = ttk.Entry(Address_frame,textvariable=r_ipvar,validate='key',validatecommand=(vip,'%P'),justify='center',width=20)
 rIp_entry.grid(row=1,column=0,sticky='nsew',padx=(5,2),pady=(0,5))
@@ -288,22 +283,25 @@ sPort_entry.grid(row=3,column=2,columnspan=2,sticky='nsew',padx=(2,5),pady=(0,5)
 Server_set = ttk.Button(Address_frame,text='Set')
 Server_set.grid(row=5,column=0,columnspan=3,sticky='s',pady=[0,5])
 #------VRC
-#VRC_config_frame = ttk.Labelframe(VRC_Settings,text='Options',labelanchor='n',padding=8)
-#VRC_config_frame.grid(row=0,column=1,sticky='n',pady=(0,0))
-#VRC_config_frame.rowconfigure([0,1],weight=1)
-#VRC_config_frame.columnconfigure([0,1],weight=1)
-#
-#vrc_enable = ttk.Checkbutton(VRC_config_frame,variable=VRC_Toggle,text='VRC Log Parser.\nDisabling this option will cause VRC Events to not work',bootstyle='round-toggle')
-#vrc_enable.grid(row=0,column=0)
-#------OSC
-#OSC_config_frame = ttk.Labelframe(OSC_Settings,text='Options',labelanchor='n',padding=8)
-#OSC_config_frame.grid(row=1,column=1,sticky='n',pady=(0,0))
-#OSC_config_frame.rowconfigure([0,1],weight=1)
-#OSC_config_frame.columnconfigure([0,1],weight=1)
-#
-#acap = ttk.Checkbutton(OSC_config_frame,variable=parameter_collect,text='Automatic Avatar Parameter Collection',bootstyle='round-toggle')
-#acap.grid(row=0,column=0)
+VRC_config_frame = ttk.Labelframe(VRC_Settings,text='Options',labelanchor='n',padding=8)
+VRC_config_frame.grid(row=0,column=1,sticky='n',pady=(0,0))
+VRC_config_frame.rowconfigure([0,1],weight=1)
+VRC_config_frame.columnconfigure([0,1],weight=1)
 
+vrc_enable = ttk.Checkbutton(VRC_config_frame,variable=VRC_Toggle,text='VRC Log Parser.\nDisabling this option will cause:\n- VRC Events to not work.\n- Player name to not automatically populate.\n- Avatar list to not automaticallt populate.',bootstyle='round-toggle')
+vrc_enable.grid(row=0,column=0)
+#------OSC
+OSC_config_frame = ttk.Labelframe(OSC_Settings,text='Options',labelanchor='n',padding=8)
+OSC_config_frame.grid(row=1,column=1,sticky='n',pady=(0,0))
+OSC_config_frame.rowconfigure([0,1],weight=1)
+OSC_config_frame.columnconfigure([0,1],weight=1)
+
+acap = ttk.Checkbutton(OSC_config_frame,variable=parameter_collect,text='Automatic Avatar Parameter Collection',bootstyle='round-toggle')
+acap.grid(row=1,column=0,columnspan=2)
+log_receive = ttk.Checkbutton(OSC_config_frame,variable=logvar_1,text='Log all received OSC messages to activity log.',bootstyle='round-toggle')
+log_receive.grid(row=0,column=0)
+log_sent = ttk.Checkbutton(OSC_config_frame,variable=logvar_2,text='Log all sent OSC messages to activity log.',bootstyle='round-toggle')
+log_sent.grid(row=0,column=1)
 #------OSC Event config
 
 
@@ -327,10 +325,10 @@ Color_frame.grid(row=1,column=0,columnspan=3,sticky='n')
 Color_label = ttk.Label(Color_frame,text='Change Theme Colors')
 Color_label.grid(row=0,column=0,sticky='n',columnspan=2)
 
-Color_button = ttk.Button(Color_frame,text='Primary',width=10,command=lambda : app_color_set(style_widgets.Primary,1))
+Color_button = ttk.Button(Color_frame,text='Primary',width=10,command=lambda : app_color_set(style.colors.get('primary'),1))
 Color_button.grid(row=1,column=0,sticky='s',padx=[5,5],pady=[5,0])
 
-Color_button2 = ttk.Button(Color_frame,text='Secondary',width=10,command=lambda : app_color_set(style_widgets.Secondary,2))
+Color_button2 = ttk.Button(Color_frame,text='Secondary',width=10,command=lambda : app_color_set(style.colors.get('secondary'),2))
 Color_button2.grid(row=1,column=1,sticky='s',padx=[5,5],pady=[5,0])
 
 #------Activity log
@@ -357,15 +355,15 @@ class Tabi_layout(ttk.Frame):
 
         self.Stick_space = stk.ScrolledFrame(self,style='Tab.TFrame',padding=[5,35,15,0])
         Spacer_frame = ttk.Frame(self,height=14)
-        self.Header_button = ttk.Button(Spacer_frame,style='c.TButton',text='Config',width=8)
-        Header_seperator = ttk.Separator(self,orient='horizontal',bootstyle='PRIMARY')
+        self.Header_button = ttk.Button(self,style='c.TButton',text='Config',width=8)
+        Header_seperator = ttk.Separator(self,orient='horizontal')
         self.Header_frame = ttk.Frame(self,padding=0)
         avatar_label = ttk.Label(self.Header_frame,text='Avatar :',font=("", 10))
         self.Avatar = ttk.Combobox(self.Header_frame,width=25,state='disable')
         self.Delete_button = ttk.Button(self.Header_frame,text='Delete Controller',width=20,bootstyle='danger')
-        ToolTip(self.Delete_button, text='Hold Shift To Delete Saved Avatar Along With Controller.\nProbably A Temporary Solution.',delay=0,bootstyle='selectbg')
+        ToolTip(self.Delete_button, text='There must always be atleast 1 controller.\nYou will be unable to delete this controller if it is the only controller.\nHold shift to delete saved avatar along with controller.\nProbably a temporary solution.',delay=0,bootstyle='selectbg')
         #self.Settings_button = ttk.Button(self.Header_frame,text='')
-        
+
         self.Add_parameter_entry = ttk.Entry(self.Header_frame)
         self.Add_parameter = ttk.Button(self.Header_frame,text='Add New',width=16,padding=5)
         self.Remove_parameter = ttk.Button(self.Header_frame,text='Forget',width=16,padding=5)
@@ -375,13 +373,13 @@ class Tabi_layout(ttk.Frame):
         self.filter_disable = ttk.Button(self.Header_frame,text='Disable',width=9,padding=4,state='disable')
         self.default_parameters_filter = ttk.Treeview(self.Header_frame,height=8,style='L.Treeview',selectmode='none')
         self.default_parameters_filter.column('#0',width=240)
-        self.default_parameters_filter.heading('#0',text='Default avatar parameters',anchor='n')
+        self.default_parameters_filter.heading('#0',text='Default parameters',anchor='n')
         self.learned_parameters_filter = ttk.Treeview(self.Header_frame,height=8,style='L.Treeview')
         self.learned_parameters_filter.column('#0',width=240)
-        self.learned_parameters_filter.heading('#0',text='Custom avatar parameters',anchor='n')
+        self.learned_parameters_filter.heading('#0',text='Custom parameters',anchor='n')
 
         self.Add_event_button = ttk.Button(self,text='Add Event')
-        self.Title = ttk.Combobox(self,width=30,style='event.TCombobox')
+        self.Title = ttk.Combobox(self,width=30)
         self.selection1 = ttk.Radiobutton(self,padding=[2,0,2,0],text='OSC',value='OSC',bootstyle='outline-toolbutton')
         self.selection2 = ttk.Radiobutton(self,padding=[2,0,2,0],text='VRC',value='VRC',bootstyle='outline-toolbutton')
         self.selection3 = ttk.Radiobutton(self,padding=[2,0,2,0],text='-',value='SYS',bootstyle='outline-toolbutton',state='disabled')
@@ -394,7 +392,7 @@ class Tabi_layout(ttk.Frame):
         self.Stick_space.vscroll.configure(bootstyle='light-round')
 
         Spacer_frame.grid(row=1,column=0,sticky='new')
-        self.Header_button.pack(side='right',padx=[0,12])
+        self.Header_button.grid(row=1,column=0,sticky='ne')#,padx=[245,0],pady=[5,0])
         Header_seperator.grid(row=1,column=0,sticky='new',pady=14)
         self.Add_event_button.grid(row=1,column=0,sticky='n')
         self.Header_frame.grid(row=0,column=0,sticky='nsew')
@@ -429,20 +427,22 @@ class Eventi_layout(ttk.Labelframe):
 
         self.Header_frame = ttk.Frame(self)
         self.body = ttk.Frame(self)
-        self.Response_list = ttk.Treeview(self.body,columns=['Address','Value','Delay'],selectmode='browse',height=8,style='L.Treeview')
-        self.Trigger = ttk.Combobox(self.Header_frame,justify='center',style='Label.TCombobox',width=45,state='disabled')
         self.Toggle = ttk.Checkbutton(self.Header_frame,text='Enabled',bootstyle='round-toggle',)
         self.sep1 = ttk.Separator(self.body,orient='horizontal')
         self.sep2 = ttk.Separator(self.body,orient='vertical')
+        self.Response_list = ttk.Treeview(self.body,columns=['Address','Value','Delay'],selectmode='browse',height=8,style='L.Treeview')
+
+        self.Trigger = ttk.Combobox(self.Header_frame,justify='center',style='Label.TCombobox',width=45,state='disabled')
         self.Condition_label = ttk.Label(self.body,text='Condition',style='alt2.TLabel')
         self.Response_label = ttk.Label(self.body,text='Response',style='alt2.TLabel')
         self.Response_address = ttk.Combobox(self.body,width=28)
         self.Address_label = ttk.Label(self.body,text='Address')
-        self.Response_value = ttk.Entry(self.body,width=8,validate='key')
-        self.Response_value_avatars = ttk.Combobox(self.body,width=8)
-        self.Value_label = ttk.Label(self.body,text='Value')
+        self.Response_value = ttk.Entry(self.body,width=20,validate='key')
+        self.Response_value_avatars = ttk.Combobox(self.body,width=20)
+        self.Value_label = ttk.Label(self.body,text='Value :')
+        self.Value_overwrite = ttk.Checkbutton(self.body,text='Use Input')
         self.Response_delay = ttk.Entry(self.body,width=4)
-        self.Delay_label = ttk.Label(self.body,text='Delay')
+        self.Delay_label = ttk.Label(self.body,text='Delay (ms) :')
         self.Response_save = ttk.Button(self.body,text='Save')
         self.List_remove = ttk.Button(self.body,text='Remove',width=7,state='disabled')
         self.List_orderup = ttk.Button(self.body,text='▲',width=2,state='disabled',style='arrow.TButton',padding=[1,0,2,0])
@@ -478,14 +478,15 @@ class Eventi_layout(ttk.Labelframe):
         self.sep2.grid(row=0,column=0,sticky='nse',rowspan=4,pady=[0,5])
         self.Response_list.grid(row=0,column=2,sticky='nsew',rowspan=4,pady=[1,0])
         self.Trigger.grid(row=0,column=0,columnspan=2,sticky='n')
-        self.Condition_label.grid(row=0,column=0,sticky='n',pady=[5,0])
+        #self.Condition_label.grid(row=0,column=0,sticky='n',pady=[5,0])
         self.Response_label.grid(row=0,column=1,sticky='n',pady=[5,0])
         self.Response_address.grid(row=1,column=1,sticky='s',pady=[5,0])
         self.Address_label.grid(row=1,column=1,sticky='n',pady=[0,5])
-        self.Response_value.grid(row=2,column=1,sticky='s',padx=[0,60],pady=[5,0])
-        self.Value_label.grid(row=2,column=1,sticky='n',padx=[0,60],pady=[0,5])
-        self.Response_delay.grid(row=2,column=1,sticky='s',padx=[50,0],pady=[5,0])
-        self.Delay_label.grid(row=2,column=1,sticky='n',padx=[50,0],pady=[0,5])
+        self.Response_value.grid(row=2,column=1,sticky='s',padx=[5,0],pady=[5,0])
+        self.Value_label.grid(row=2,column=1,sticky='n',padx=[0,50],pady=[0,5])
+        self.Value_overwrite.grid(row=2,column=1,sticky='n',padx=[80,0],pady=[3,0])
+        self.Response_delay.grid(row=3,column=1,sticky='e',padx=[0,10],pady=[0,0])
+        self.Delay_label.grid(row=3,column=1,sticky='e',padx=[0,55],pady=[0,0])
         self.Response_save.grid(row=3,column=0,columnspan=2,sticky='s',pady=[0,5])
         self.List_remove.grid(row=3,column=2,sticky='s',pady=[0,5],padx=[0,0])
         self.List_orderup.grid(row=3,column=2,sticky='s',pady=[0,9],padx=[0,145])

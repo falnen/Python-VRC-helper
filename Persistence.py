@@ -3,6 +3,7 @@ import json
 import appdirs 
 from shutil import move
 import Layout
+from datetime import datetime
 
 directory_dir = Path(appdirs.user_data_dir('osc app', 'falnen'))
 directory_dir.mkdir(parents=True, exist_ok=True)
@@ -52,33 +53,32 @@ def save_state(frames_dict):
         'Primary-color':Layout.style.colors.get('primary'),
         'Secondary-color':Layout.style.colors.get('secondary')
         }
-    try:
         
-        State['Avatar data'] = list(frames_dict.values())[0][1].saved_avatars
-        State['Controllers'] = {}
-        
-        for avatar, controller in frames_dict.items():
-            name = controller[1].name
-            #State['Avatar data'][avatar] = controller[1].saved_avatars
-            State['Controllers'][name] = {'Avatar':avatar}
-            saved_controllers.add(name)
-            for Title, Stick in controller[1].Stick_list.items():
-                State['Controllers'][name][Title] = {'Type':Stick.Id[1],'Trigger':Stick.Trigger.get()}
+    State['Avatar data'] = list(frames_dict.values())[0][1].saved_avatars
+    State['Controllers'] = {}
+    
+    for avatar, controller in frames_dict.items():
+        name = controller[1].name
+        State['Controllers'][name] = {'Avatar':avatar}
+        saved_controllers.add(name)
+        for Title, sList in controller[1].Stick_list.items():
+            for Stick in sList[1]:
+                State['Controllers'][name][Stick.Id[0]] = {'Type':sList[0]}
+                State['Controllers'][name][Stick.Id[0]]['Addresses'] = [a for a in Stick.addresses]
+                State['Controllers'][name][Stick.Id[0]]['Title'] = Title
                 responseIds = Stick.Response_list.get_children()
                 for response in responseIds:
                     data = Stick.stick_data[response]
-                    State['Controllers'][name][Title][response] = data
-    except Exception as e:
-        print(e,'\nif "Index out of range" its cause im trying to grab saved avatars from an empty frames dict')
-        pass
-    for key in list(State.get('Controllers')):
-        if key not in saved_controllers:# {'App version', 'Settings', 'Controllers', 'Avatar data'}:
+                    State['Controllers'][name][Stick.Id[0]][response] = data
+
+    for key in State['Controllers'].keys():
+        if key not in saved_controllers:
             del State['Controllers'][key]
 
     with open(app_state_file,'w') as file:
         json.dump(State,file,indent=4)
 
-def Load_data():
+def Load_data() -> dict:
     dir = Path(Directory())
     app_state_file = dir.joinpath("App State.json")
     if app_state_file.exists():

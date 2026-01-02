@@ -1,5 +1,5 @@
 import ttkbootstrap as ttk
-GAME_EVENTS = ['User joined','User left','Avatar changed','Invite', 'Invite request', 'Friend requests']#Group invites and notifs todo
+GAME_EVENTS = ('User joined','User left','Avatar changed','Invite', 'Invite request', 'Friend requests')#Group invites and notifs todo
 CONTROLS_LIST = (
     '/avatar/change',
     '/input/MoveForward',
@@ -33,7 +33,6 @@ CONTROLS_LIST = (
     '/input/SpinHoldLR'
     )
 READ_ONLY_PARAMETERS = (
-    '/avatar/parameters/',
     '/avatar/parameters/Viseme',
     '/avatar/parameters/Voice',
     '/avatar/parameters/Earmuffs',
@@ -90,10 +89,20 @@ LAYOUT_TEMPLATES = {
         'any_world': {'widget': ttk.Checkbutton, 'params': {'text':'Any'}, 'grid':{'row':2,'column':0,'sticky':'n','padx':[60,0],'pady':[3,0]}},
         },
     "OSC": {
-            'value_label': {'widget': ttk.Label, 'params': {'text':'Value'}, 'grid':{'row':2,'column':0,'sticky':'n'}},
-            'condition_entry': {'widget': ttk.Entry, 'params':{'width':8,'validate':'key'}, 'grid':{'row':2,'column':0,'sticky':'s'}},
-            'condition_operator': {'widget': ttk.Combobox, 'params':{'values':['=','>','<'],'width':2,'state':'readonly'}, 'grid':{'row':1,'column':0,'sticky':'n'}}
-         }
+            'value_label': {'widget': ttk.Label, 'params': {'text':'Value :'}, 'grid':{'row':2,'column':0,'sticky':'sw','padx':[5,0],'pady':[0,5]}},
+            'condition_entry': {'widget': ttk.Entry, 'params':{'width':8,'validate':'key'}, 'grid':{'row':2,'column':0,'sticky':'se','padx':[0,50],'pady':[0,0]}},
+            'condition_operator': {'widget': ttk.Combobox, 'params':{'values':['=','>','<'],'width':2,'state':'readonly'}, 'grid':{'row':2,'column':0,'sticky':'sw','padx':[45,0],'pady':[0,0]}},
+            'any_value': {'widget': ttk.Checkbutton, 'params':{'text':'Any'}, 'grid':{'row':2,'column':0,'sticky':'se','padx':[0,5],'pady':[0,5]}},
+            'compound_label': {'widget': ttk.Label, 'params':{'text':'Address list'}, 'grid':{'row':0,'column':0,'sticky':'n','pady':[1,0]}},
+            'compound_list': {'widget': ttk.Treeview, 'params':{'show':'tree','selectmode':'browse','height':2,'style':'L.Treeview'}, 'grid':{'row':0,'column':0,'sticky':'new','rowspan':2,'pady':[15,0]}},
+            'compound_address': {'widget': ttk.Combobox, 'params':{'state':'readonly','width':15}, 'grid':{'row':1,'column':0,'sticky':'nw','pady':[7,0],'padx':[5,0]}},
+            'compound_add': {'widget': ttk.Button, 'params':{'text':'Add','width':8,'padding':2}, 'grid':{'row':1,'column':0,'sticky':'ne','pady':[10,0],'padx':[0,7]}},
+            'compound_expression': {'widget': ttk.Entry, 'params':{}, 'grid':{'row':1,'column':0,'sticky':'sew','rowspan':2,'pady':[0,33],'padx':[5,5]}},
+            'compound_toggle': {'widget': ttk.Button, 'params':{'text':'Single input','width':14}, 'grid':{'row':3,'column':0,'sticky':'sw','padx':[5,0],'pady':[0,5]}},
+         },
+    "OSC2": {
+
+    }
 }
 WIDGET_DATA = {
     'user': 'name_entry',
@@ -104,4 +113,5 @@ WIDGET_DATA = {
     'address': 'Response_address',
     'value': 'Response_value' or 'Response_value_avatars',
     'delay': 'Response_delay',
+    'expression': 'compound_expression',
 }

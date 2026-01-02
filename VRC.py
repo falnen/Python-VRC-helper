@@ -1,22 +1,48 @@
+from os import path
 import re
 #from datetime import datetime
 from pathlib import Path
+import json
+from Constants import READ_ONLY_PARAMETERS
 
 log_dir = Path.home() / "AppData" / "LocalLow" / "VRChat" / "VRChat"
+Avtr_dir = Path.home() / "appData" / "LocalLow" / "VRChat" / "VRChat" / "OSC"
+user_folders = Avtr_dir.glob('usr_*')
+avatar_folders = [avatar.joinpath('Avatars') for avatar in user_folders]
 logfile_pattern = "output_log_*"
 
-def find_latest_log():
+def find_latest_log() -> Path:
     log_files = list(log_dir.glob(logfile_pattern))
     return max(log_files, key=lambda f: f.stat().st_birthtime) if log_files else None
 
+def Build_avatar_list() -> dict:
+    try:User_avtr_dir = Avtr_dir.joinpath(Log_parser.User_id)
+    except:User_avtr_dir = max(avatar_folders,key=lambda f:f.stat().st_mtime)
+    OSC_avatars = {}
+    try:
+        for json_file in User_avtr_dir.rglob("*.json"):
+            with open(json_file, 'r', encoding = 'utf-8-sig') as file:
+                data = json.load(file)
+                name = data['name']
+                new_parameters = []
+                for parameter in data['parameters']:
+                    address = parameter['output']['address']
+                    if address in READ_ONLY_PARAMETERS:continue
+                    new_parameters.append(address)
+                OSC_avatars[name] = data['id']
+                OSC_avatars[data['id']] = [name,new_parameters]
+        return OSC_avatars
+    except:
+        print('error reading avatar Json files.')
+
 class Log_parser:
+    user_id = None
     def __init__(self,handler):
         self.last_line = 0
         self.log_file = find_latest_log()
         self.handler = handler
         self.skip = 'Normal'
         self.Local_user = None
-        self.avatar = None
         self.search_limit = 0
         self.worldname = re.compile(r'worldName=(.*)}')
         self.event_patterns = {
@@ -40,14 +66,16 @@ class Log_parser:
         }
 
     def Find_user(self):
-        find = re.compile(r'User Authenticated: (?P<User>.*) ')
+        find = re.compile(r'User Authenticated: (?P<User>.*) \((?P<ID>.*)\)')
         with open(self.log_file,'r',encoding='utf-8') as file:
             while not self.Local_user:
                 file.seek(self.last_line,0)
                 line = file.readline()
                 self.last_line = file.tell()
                 if found := find.search(line):
-                    self.Local_user = found.group(1)
+                    self.Local_user = found.group('User')
+                    self.User_id = found.group('ID')
+                    print(self.User_id)
                     self.Read_log()
 
     def Read_log(self):
@@ -88,7 +116,6 @@ class Log_parser:
                         args = result.groupdict()
                         if not args.get('User') == self.Local_user: break
                         args['Type'] = 'Local avatar'
-                        self.avatar = args.get('Avatar')
                         self.handler(args)
                         break
 
@@ -98,5 +125,4 @@ class Log_parser:
                     if condition == 'Notification' and args.get('Type') == 'Invite': args['World'] = self.worldname.search(args['Details']).group(1)
                     elif condition == 'Avatar changed' and args.get('User') == self.Local_user:
                         args['Type'] = 'Local avatar'
-                        self.avatar = args.get('Avatar')
                     self.handler(args)
