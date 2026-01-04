@@ -8,7 +8,9 @@ Please understand that this project is very much the work of an amateur.
 
 ## Notable Dependencies
 [Python_Osc](https://github.com/attwad/python-osc)
+
 [appdirs](https://github.com/ActiveState/appdirs)
+
 [ttkbootstrap](https://ttkbootstrap.readthedocs.io/en/latest/)
 
 ## License
