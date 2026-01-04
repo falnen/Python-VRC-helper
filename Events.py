@@ -1,5 +1,6 @@
 
 import ttkbootstrap as ttk
+import ttkbootstrap.constants as tbk
 import re
 from ttkbootstrap.tooltip import ToolTip
 from Layout import Eventi_layout
@@ -135,7 +136,7 @@ class Eventi(Eventi_layout):
                     if widget is None: continue
 
                     if isinstance(widget, ttk.Entry):
-                        widget.delete(0, ttk.END)
+                        widget.delete(0, tbk.END)
                         widget.insert(0, value if value is not None else '')
                     elif isinstance(widget, ttk.Combobox):
                         widget.set(value if value is not None else '')

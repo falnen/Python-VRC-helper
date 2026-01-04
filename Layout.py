@@ -21,10 +21,6 @@ style = ttk.Style("darkly")
 style.colors.set('primary', '#632646')
 style.colors.set('secondary', '#FF5F93')
 style.colors.set('info', '#333333')
-#style.colors.set('selectbg','#632646')
-#light = style.colors.get('light')
-#dark = style.colors.get('dark')
-style.layout('TSeparator',[('Separator.separator', {'sticky': 'nswe'})])
 style.layout("danger.TButton", [('Button.border', {'sticky': 'nswe', 'children': [('Button.padding', {'sticky': 'nswe', 'children': [('Button.label', {'sticky': 'nswe'})]})]})])
 style.layout("arrow.TButton", [('Button.border', {'sticky': 'nswe', 'children': [('Button.padding', {'sticky': 'nswe', 'children': [('Button.label', {'sticky': 'nswe'})]})]})])
 style.layout("setting.TButton", [('Button.label', {'sticky': 'nswe'})])
@@ -82,7 +78,39 @@ def style_widgets():
     style.configure('Tab.TLabelframe.Label',background='#171717')
     style.configure('Tab.TNotebook',tabposition='wn',tabmargins=[0,10,0,10])
     style.configure('TCheckbutton',indicatorcolor=Primary)
-    #print(style.configure('round.TCheckbutton'))
+    # Ensure toggle and other checkbutton variants pick up colors
+    # Note: creating variant-specific styles like 'round.TCheckbutton' can trigger
+    # ttkbootstrap builder errors if the builder method is unavailable. Stick to
+    # the base 'TCheckbutton' to avoid creating unsupported styles.
+    style.map('TCheckbutton',background=[('selected',Primary),('!selected','#222222')],foreground=[('selected',style.colors.get('light')),('!selected',Secondary)])
+    style.configure('TRadiobutton',background='#222222',foreground=Secondary)
+    style.map('TRadiobutton',background=[('selected',Primary),('!selected','#222222')],foreground=[('selected',style.colors.get('light')),('!selected',Secondary)])
+
+    #Cautious Scrollbar styling... attempting this sometimes breaks the theme.
+    try:
+        style.configure('TScrollbar',troughcolor='#171717',background=Primary,arrowcolor=Secondary)
+    except tk.TclError as e:
+        if 'Duplicate element' not in str(e):
+            raise
+    try:
+        style.configure('Vertical.TScrollbar',troughcolor='#171717',background=Primary,arrowcolor=Secondary)
+    except tk.TclError as e:
+        if 'Duplicate element' not in str(e):
+            raise
+    try:
+        style.configure('Horizontal.TScrollbar',troughcolor='#171717',background=Primary,arrowcolor=Secondary)
+    except tk.TclError as e:
+        if 'Duplicate element' not in str(e):
+            raise
+
+    style.layout('Label.TCombobox',[("Combobox.downarrow",{"side": tk.RIGHT, "sticky": tk.S},),("Combobox.padding",{"expand": "1","sticky": tk.NSEW,"children": [("Combobox.textarea",{"sticky": tk.NSEW},)],},),])
+    style.configure('TCombobox',bordercolor=Primary,arrowcolor=Secondary,focusfill=Primary)
+    style.map('TCombobox',fieldbackground=[('disabled','#222222'),('readonly','#222222')],bordercolor=[('focus',Primary),('disabled','#222222')],arrowcolor=[('focus',Primary),('!focus',Secondary),('disabled',Secondary)],background=[('readonly','#222222')])
+    style.configure('Label.TCombobox',background='#222222',bordercolor='#222222',arrowcolor=Secondary)
+    style.map('Label.TCombobox',fieldbackground=[('disabled','#222222')],bordercolor=[('disabled','#222222')],arrowcolor=[('disabled',Secondary)])
+
+    style.configure('TEntry',fieldbackground='#222222',bordercolor=Primary,focusfill=Primary)
+    style.map('TEntry',fieldbackground=[('disabled','#222222'),('focus','#222222')],bordercolor=[('focus',Primary)])
 style_widgets()
 #----------------------------Functions
 location_var = ttk.StringVar(value=Directory())
@@ -135,30 +163,149 @@ def hide_custom_menu(event):
         mborderframe.grid_forget()
         mborderframe.unbind_all('<FocusIn>')
 
-def app_color_set(initcolor,var):
-    '''
-    I hate this.
-    Copied the mothod from the ttkbootstrap example app, but it throws an error on occasion.
-    I plan to rebuild this in the future.
-    '''
-    Color_pop.initialcolor = initcolor
-    if var != 3:
-        Color_pop.show(wait_for_result=True)
-        retcolor = Color_pop.result
-    else:retcolor ='#ffffff'
-    if not retcolor:return
-    if var == 1:
-        style.colors.set('primary', retcolor.hex)
-    elif var == 2:
-        style.colors.set('secondary', retcolor.hex)
-    style_widgets()
+class ThemeManager:
+    """ This class is mostly AI generated, as my own implementation would frequently fail and i could not for the life of me figure it out.\n
+    Safe theme manager: opens a color chooser, updates style colors in-place,
+    and reapplies custom widget configurations without registering new themes.
+    This avoids duplicate-theme registration errors and is compatible with custom layouts.
+    """
+    def __init__(self, style_obj):
+        self.style = style_obj
 
-    #style_widgets()
-    #colors = {label: style.colors.get(label) for label in style.colors.label_iter()}
-    #themename = "temp_" + str(uuid4()).replace("-", "")[:10]
-    #definition = ThemeDefinition(themename, colors, 'dark')
-    #style.register_theme(definition)
-    #style.theme_use(themename)
+    def choose_color(self, var):
+        # var: 1 => primary, 2 => secondary, 3 => force white
+        if var == 3:
+            newcolor = '#ffffff'
+        else:
+            initial = self.style.colors.get('primary') if var == 1 else self.style.colors.get('secondary')
+            try:
+                chooser = colorchooser.ColorChooserDialog(Root, title='Palette', initialcolor=initial)
+                chooser.show(wait_for_result=True)
+                ret = getattr(chooser, 'result', None)
+            except tk.TclError as e:
+                try:
+                    Message_display('Style', 'Color chooser error:', text=str(e))
+                except Exception:
+                    pass
+                return
+            if not ret:
+                return
+            if isinstance(ret, str):
+                newcolor = ret
+            else:
+                newcolor = getattr(ret, 'hex', None) or str(ret)
+
+        if var == 1:
+            self.style.colors.set('primary', newcolor)
+        elif var == 2:
+            self.style.colors.set('secondary', newcolor)
+
+        # Try to re-register a temporary theme to force ttkbootstrap builders
+        # to re-run and update widgets that are created by builder methods
+        # (combobox arrows, toggle toolbuttons, etc.). Use a unique name to
+        # avoid duplicate-theme name errors.
+        try:
+            colors = {label: self.style.colors.get(label) for label in self.style.colors.label_iter()}
+            themename = "temp_" + str(uuid4()).replace("-", "")[:12]
+            definition = ThemeDefinition(themename, colors, self.style.theme_use())
+            try:
+                self.style.register_theme(definition)
+                self.style.theme_use(themename)
+            except Exception:
+                # If registering fails, fall back to just reapplying widget configs
+                pass
+
+            try:
+                style_widgets()
+            except Exception as e:
+                try:
+                    Message_display('Style', 'Failed applying style:', text=str(e))
+                except Exception:
+                    pass
+            # refresh existing widgets so builder-created elements (combobox arrows,
+            # toggle toolbuttons, entry focus, etc.) update in-place
+            try:
+                self.refresh_widgets()
+            except Exception:
+                pass
+        except Exception:
+            # conservative fallback if colors iteration or theme registration fails
+            try:
+                style_widgets()
+            except Exception:
+                pass
+            try:
+                self.refresh_widgets()
+            except Exception:
+                pass
+
+    def apply_colors(self):
+        """Apply current `style.colors` by registering a temporary theme
+        and reapplying widget-specific configurations. Use this at startup
+        to force ttkbootstrap builder-generated widgets to pick up colors.
+        """
+        try:
+            colors = {label: self.style.colors.get(label) for label in self.style.colors.label_iter()}
+            themename = "startup_" + str(uuid4()).replace("-", "")[:12]
+            definition = ThemeDefinition(themename, colors, self.style.theme_use())
+            try:
+                self.style.register_theme(definition)
+                self.style.theme_use(themename)
+            except Exception:
+                pass
+            try:
+                style_widgets()
+            except Exception:
+                pass
+        except Exception:
+            try:
+                style_widgets()
+            except Exception:
+                pass
+
+    def refresh_widgets(self, root_widget=None):
+        """Recursively reapply style names to existing widgets to force a visual refresh.
+        This avoids having to destroy/recreate widgets created before a theme update.
+        """
+        if root_widget is None:
+            root_widget = Root
+
+        try:
+            children = root_widget.winfo_children()
+        except Exception:
+            return
+
+        for child in children:
+            # If widget exposes a 'style' option, re-set it to force redraw
+            try:
+                s = child.cget('style')
+            except Exception:
+                s = None
+            if s:
+                try:
+                    child.configure(style=s)
+                except Exception:
+                    pass
+
+            # Keep refresh light-weight: ensure scrollbars get an orientation-specific style
+            try:
+                if isinstance(child, ttk.Scrollbar):
+                    orient = child.cget('orient')
+                    if orient and not child.cget('style'):
+                        if orient.lower().startswith('v'):
+                            child.configure(style='Vertical.TScrollbar')
+                        else:
+                            child.configure(style='Horizontal.TScrollbar')
+            except Exception:
+                pass
+
+            # Recurse
+            try:
+                self.refresh_widgets(child)
+            except Exception:
+                pass
+
+theme_manager = ThemeManager(style)
 def validate_ip(P):
     if P == '' or P.replace('.', '').isdigit():
         if '..' not in P and not P.startswith('.'): 
@@ -291,17 +438,17 @@ VRC_config_frame.columnconfigure([0,1],weight=1)
 vrc_enable = ttk.Checkbutton(VRC_config_frame,variable=VRC_Toggle,text='VRC Log Parser.\nDisabling this option will cause:\n- VRC Events to not work.\n- Player name to not automatically populate.\n- Avatar list to not automaticallt populate.',bootstyle='round-toggle')
 vrc_enable.grid(row=0,column=0)
 #------OSC
-OSC_config_frame = ttk.Labelframe(OSC_Settings,text='Options',labelanchor='n',padding=8)
+OSC_config_frame = ttk.Labelframe(OSC_Settings,text='Options',labelanchor='n',padding=12)
 OSC_config_frame.grid(row=1,column=1,sticky='n',pady=(0,0))
-OSC_config_frame.rowconfigure([0,1],weight=1)
-OSC_config_frame.columnconfigure([0,1],weight=1)
+OSC_config_frame.rowconfigure([0,1,2],weight=1,pad=8)
+OSC_config_frame.columnconfigure(0,weight=1,pad=8)
 
 acap = ttk.Checkbutton(OSC_config_frame,variable=parameter_collect,text='Automatic Avatar Parameter Collection',bootstyle='round-toggle')
-acap.grid(row=1,column=0,columnspan=2)
+acap.grid(row=2,column=0,sticky='w')
 log_receive = ttk.Checkbutton(OSC_config_frame,variable=logvar_1,text='Log all received OSC messages to activity log.',bootstyle='round-toggle')
-log_receive.grid(row=0,column=0)
+log_receive.grid(row=0,column=0,sticky='w')
 log_sent = ttk.Checkbutton(OSC_config_frame,variable=logvar_2,text='Log all sent OSC messages to activity log.',bootstyle='round-toggle')
-log_sent.grid(row=0,column=1)
+log_sent.grid(row=1,column=0,sticky='w')
 #------OSC Event config
 
 
@@ -317,18 +464,15 @@ Location_button = ttk.Button(Location_frame,text='Change config folder',command=
 Location_button.grid(row=1,column=1,sticky='s',pady=[5,0])
 
 #------Color selections
-Color_pop = colorchooser.ColorChooserDialog(Root,title='Pallet')
-
 Color_frame = ttk.Labelframe(Basic_settings,text='Theme Colors',labelanchor='n',padding=10)
 Color_frame.grid(row=1,column=0,columnspan=3,sticky='n')
 
 Color_label = ttk.Label(Color_frame,text='Change Theme Colors')
 Color_label.grid(row=0,column=0,sticky='n',columnspan=2)
 
-Color_button = ttk.Button(Color_frame,text='Primary',width=10,command=lambda : app_color_set(style.colors.get('primary'),1))
+Color_button = ttk.Button(Color_frame,text='Primary',width=10,command=lambda : theme_manager.choose_color(1))
 Color_button.grid(row=1,column=0,sticky='s',padx=[5,5],pady=[5,0])
-
-Color_button2 = ttk.Button(Color_frame,text='Secondary',width=10,command=lambda : app_color_set(style.colors.get('secondary'),2))
+Color_button2 = ttk.Button(Color_frame,text='Secondary',width=10,command=lambda : theme_manager.choose_color(2))
 Color_button2.grid(row=1,column=1,sticky='s',padx=[5,5],pady=[5,0])
 
 #------Activity log
@@ -355,7 +499,7 @@ class Tabi_layout(ttk.Frame):
 
         self.Stick_space = stk.ScrolledFrame(self,style='Tab.TFrame',padding=[5,35,15,0])
         Spacer_frame = ttk.Frame(self,height=14)
-        self.Header_button = ttk.Button(self,style='c.TButton',text='Config',width=8)
+        self.Header_button = ttk.Button(self,style='c.TButton',text='Config',width=8,padding=0)
         Header_seperator = ttk.Separator(self,orient='horizontal')
         self.Header_frame = ttk.Frame(self,padding=0)
         avatar_label = ttk.Label(self.Header_frame,text='Avatar :',font=("", 10))
@@ -392,7 +536,8 @@ class Tabi_layout(ttk.Frame):
         self.Stick_space.vscroll.configure(bootstyle='light-round')
 
         Spacer_frame.grid(row=1,column=0,sticky='new')
-        self.Header_button.grid(row=1,column=0,sticky='ne')#,padx=[245,0],pady=[5,0])
+        self.Header_button.grid(row=1,column=0,sticky='ne',padx=[0,0],pady=[0
+                                                                            ,0])
         Header_seperator.grid(row=1,column=0,sticky='new',pady=14)
         self.Add_event_button.grid(row=1,column=0,sticky='n')
         self.Header_frame.grid(row=0,column=0,sticky='nsew')

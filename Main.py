@@ -9,11 +9,15 @@ import VRC
 '''
 - T H E   P L A N -
       maybe.
+
+Add 'test' button to controllers to send a test OSC message.
+go over ai implemented theme feature.
 allow popout message display log window.
 consider converting expression widget to a text box for multi-line expressions.
 consider also allowing expression widget to popout.
-fix UI color change feature.
 consider the difference between using ttk var vs reading directly from the widget.
+reconsider UI design of 'compound' osc events.
+Update 'saved avatars' parameters with details from 'Avatar_info_from_file'
 
 Add option to hide unwanted parameters.
 done :o ! -Event address change handling needs a custom function within Eventi.
@@ -21,7 +25,7 @@ done :o ! -Event address change handling needs a custom function within Eventi.
 well... it does...- Eventi trigger changing needs to remap address
 redesign avatar menu
 done, hopefully. - think of a way to make duplicate events unique for saving to json
-rething oscmappall toggle
+rethink oscmappall toggle
 
 done...PARAMETER AUTOFILL BUTTON!!!
 not needed? manual player name entry
@@ -35,17 +39,14 @@ DONE enough...-Next i think - controller configuration
 DONE - select which avatar to use when creating a controller...
 Done - fix sidebar
 -Easy- configure log reader to only read logs from the current day, and skip to the current hour/some amount of time.
-- Release 0.2?
 - finish parameter filter
 done - enable parameter removal(delete unwanted parameters from the saved_avatars dict)
 - avatar / parameter blacklist
 kinda? - log filtering
 ----??? configure whats picked up by the log parser?
 - debug into log, and maybe file.
-- release 0.3?
 - Condition matching with messages from notifications.
 - system events....
-- release 0.4?
 '''
 frames: dict[str,tuple[str,object]] = {} 
 '''
@@ -262,9 +263,19 @@ def load_settings(settings):
     Layout.r_portvar.set(settings['r_Port'])
     Layout.s_ipvar.set(settings['s_Ip'])
     Layout.s_portvar.set(settings['s_Port'])
-    #Layout.style.colors.set('primary', settings['Primary-color'])
-    #Layout.style.colors.set('secondary', settings['Secondary-color'])
-    #Layout.app_color_set('#000000',3)
+    Layout.logvar_1.set(settings['Log_received'])
+    Layout.logvar_2.set(settings['Log_sent'])
+ 
+    Layout.style.colors.set('primary', settings.get('Primary-color'))
+    Layout.style.colors.set('secondary', settings.get('Secondary-color'))
+    # reapply widget configs and force builder update after setting colors
+    # try theme-manager apply which registers a temporary theme
+    try:
+        Layout.theme_manager.apply_colors()
+        Layout.theme_manager.refresh_widgets()
+        Layout.style_widgets()
+    except Exception as e: Layout.Message_display(text='Theme error :', address ='', message= e)
+
 
 def defocus(event):
     '''

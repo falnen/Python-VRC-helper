@@ -49,6 +49,8 @@ def save_state(frames_dict):
         'r_Port':Layout.r_portvar.get(),
         's_Ip':Layout.s_ipvar.get(),
         's_Port':Layout.s_portvar.get(),
+        'Log_received':Layout.logvar_1.get(),
+        'Log_sent':Layout.logvar_2.get(),
         'Path':Layout.location_var.get(),
         'Primary-color':Layout.style.colors.get('primary'),
         'Secondary-color':Layout.style.colors.get('secondary')

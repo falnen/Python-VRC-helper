@@ -158,7 +158,7 @@ class Tabi(Tabi_layout):
         if isinstance(node, ast.Constant):  # Python 3.8+
             if isinstance(node.value, (int, float)):
                 return node.value
-            Tabi_layout.Message_display(text='Expression evaluation error :', address ='{node.value}', message= f'\nNon-numeric constant in expression.')
+            Message_display(text='Expression evaluation error :', address =f'{node.value}', message= f'\nNon-numeric constant in expression.')
             raise ValueError("Non-numeric constant in expression")
         if isinstance(node, ast.BinOp):
             left = self._safe_eval_ast(node.left)
@@ -166,16 +166,16 @@ class Tabi(Tabi_layout):
             op = type(node.op)
             if op in operators:
                 return operators[op](left, right)
-            Tabi_layout.Message_display(text='Expression evaluation error :', address ='{op}', message= f'\nOperator not allowed in expression.')
+            Message_display(text='Expression evaluation error :', address =f'{op}', message= f'\nOperator not allowed in expression.')
             raise ValueError("Operator not allowed")
         if isinstance(node, ast.UnaryOp):
             if isinstance(node.op, ast.UAdd):
                 return +self._safe_eval_ast(node.operand)
             if isinstance(node.op, ast.USub):
                 return -self._safe_eval_ast(node.operand)
-            Tabi_layout.Message_display(text='Expression evaluation error :', address ='{node.op}', message= f'\nUnary operator not allowed in expression.')
+            Message_display(text='Expression evaluation error :', address =f'{node.op}', message= f'\nUnary operator not allowed in expression.')
             raise ValueError("Unary operator not allowed")
-        Tabi_layout.Message_display(text='Expression evaluation error :', address ='{node}', message= f'\nUnsupported expression node.')
+        Message_display(text='Expression evaluation error :', address =f'{node}', message= f'\nUnsupported expression node.')
         raise ValueError("Unsupported expression node")
 
     def evaluate_expression(self, Stick, expr: str, values_map: dict):
@@ -189,8 +189,8 @@ class Tabi(Tabi_layout):
         def repl(match):
             addr = match.group(1)
             if addr not in Stick.addresses:
-                Tabi_layout.Message_display(text='Expression evaluation error :', address ='{addr}', message= f'\nAddress not registered in stick.')
-                raise KeyError(f"address not registered in stick: {addr}")
+                #Message_display(text='Expression evaluation error :', address =f'{addr}', message= f'\nAddress not registered in event.')
+                raise KeyError(f"address not registered in event: {addr},\n Registered addresses: {Stick.addresses}")
             if addr not in values_map:
                 # dependent value missing
                 raise KeyError(f"missing value for address: {addr}")
@@ -203,7 +203,7 @@ class Tabi(Tabi_layout):
                     return str(val)
                 return str(float(val))
             except Exception as e:
-                Tabi_layout.Message_display(text='Expression evaluation error :', address ='{addr}', message= f'\nNon-numeric value: {val}')
+                #Message_display(text='Expression evaluation error :', address =f'{addr}', message= f'\nNon-numeric value: {val}')
                 raise ValueError(f"non-numeric value for {addr}: {val}") from e
 
         expr_sub = re.sub(r'\{([^}]+)\}', repl, expr)
@@ -226,10 +226,10 @@ class Tabi(Tabi_layout):
                     Received_value = self.evaluate_expression(Stick, data['expression'], values_map)
                 except KeyError as ke:
                     # missing dependent value
-                    Message_display(text='Expression skipped, missing value:', address ='{ke}', message= f'\n{data["expression"]}')
+                    Message_display(text='Expression skipped, missing value:', address =f'{ke}', message= f'\n{data["expression"]}')
                     continue
                 except Exception as e:
-                    Message_display(text='Expression evaluation error :', address ='{e}', message= f'\n{data["expression"]}')
+                    Message_display(text='Expression evaluation error :', address =f'{e}', message= f'\n{data["expression"]}')
                     continue
                 
             passed = (
