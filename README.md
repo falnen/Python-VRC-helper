@@ -6,6 +6,10 @@ I started this project 2 years ago with no coding experience.
 It's had several itterations before reaching this stage, and i've used this project to learn about python and programming from scratch with only online resources.
 Please understand that this project is very much the work of an amateur.
 
+## Notable Dependencies
+[Python_Osc](https://github.com/attwad/python-osc)
+[appdirs](https://github.com/ActiveState/appdirs)
+[ttkbootstrap](https://ttkbootstrap.readthedocs.io/en/latest/)
 
 ## License
 
